@@ -12,7 +12,7 @@ The Cloudflare Pages adapter exposes WordPress-style paths below `/api/wp/v2`. C
 | `/api/wp/v2/media/{id}` | `GET`, `PATCH` | Fetch a media object or replace its file with `media:write` while preserving its ID. |
 | `/api/wp/v2/categories` and `/tags` | `GET` | List taxonomy terms. |
 | `/api/wp/v2/categories/{id}` and `/tags/{id}` | `GET` | Fetch one taxonomy term. |
-| `/api/wp/v2/users` and `/users/{id}` | `GET` | Fetch public author identity fields only. |
+| `/api/wp/v2/users` and `/users/{id}` | `GET` | Fetch paginated public author identity fields only; email and role data are never returned. |
 
 ## Authentication
 
@@ -42,6 +42,12 @@ curl -X POST "$CMS_ORIGIN/api/wp/v2/posts" \
 ## Collections and Pagination
 
 The `posts`, `pages`, `media`, and `users` collections accept `page` and `per_page` parameters; `per_page` is capped at 100. Their responses include `X-WP-Total` and `X-WP-TotalPages` headers. Production post and page collections also accept `search`, which filters title, excerpt, and body content before calculating both the rows and pagination totals.
+
+## Intentional Compatibility Boundaries
+
+The adapter implements the public content, taxonomy, media, and author-identity resources that programmatic publishing clients require. Menu configuration and global site settings are **not** exposed as WordPress REST write resources. They remain protected CMS administration procedures because they control site-wide behavior, custom CSS, trusted plugin activation, and indexing policy; exposing them through general bearer-token scopes would weaken the privilege boundary. Public menu and public setting values continue to be served through the CMS public site contract.
+
+The public `/users` collection and individual identity responses are contract-tested in both the local adapter and the Cloudflare Pages Function. Both return the same privacy-safe identity fields, pagination headers, and stable author URL shape.
 
 ## Media Replacement
 

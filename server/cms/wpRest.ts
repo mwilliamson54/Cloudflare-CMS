@@ -7,10 +7,12 @@ import {
   deleteContentEntry,
   getContentEntry,
   getContentEntryBySlug,
+  getUserById,
   listCategories,
   listContentEntries,
   listMedia,
   listTags,
+  listUsers,
   restoreContentEntry,
   trashContentEntry,
   updateContentEntry,
@@ -19,7 +21,7 @@ import { persistMediaReplacement, persistMediaUpload } from "./media";
 import { authenticateRestRequest } from "./restAuth";
 import { requireCapability, requireEntryOwnership } from "./permissions";
 
-type Resource = "posts" | "pages" | "media" | "categories" | "tags";
+type Resource = "posts" | "pages" | "media" | "categories" | "tags" | "users";
 
 const restWindows = new Map<string, { count: number; resetAt: number }>();
 const REST_WINDOW_MS = 60_000;
@@ -84,6 +86,11 @@ function contentResponse(entry: Awaited<ReturnType<typeof getContentEntry>>) {
   };
 }
 
+function userResponse(user: Awaited<ReturnType<typeof getUserById>>) {
+  if (!user) return null;
+  return { id: user.id, name: user.name, slug: `author-${user.id}`, description: "", link: `/author/${user.id}`, avatar_urls: {}, registered_date: user.createdAt.toISOString() };
+}
+
 function wpError(res: Response, status: number, code: string, message: string) {
   return res.status(status).json({ code, message, data: { status } });
 }
@@ -113,6 +120,13 @@ export function registerWordPressRestRoutes(app: Express) {
       if (resource === "categories") return res.json(await listCategories());
       if (resource === "tags") return res.json(await listTags());
       if (resource === "media") return res.json(await listMedia({ page, perPage, query: typeof req.query.search === "string" ? req.query.search : undefined }));
+      if (resource === "users") {
+        const users = await listUsers();
+        const start = (page - 1) * perPage;
+        res.setHeader("X-WP-Total", String(users.length));
+        res.setHeader("X-WP-TotalPages", String(Math.max(1, Math.ceil(users.length / perPage))));
+        return res.json(users.slice(start, start + perPage).map(user => userResponse(user)));
+      }
       return wpError(res, 404, "rest_no_route", "No route was found matching the URL and request method.");
     } catch (error) { next(error); }
   });
@@ -120,6 +134,11 @@ export function registerWordPressRestRoutes(app: Express) {
   app.get("/api/wp/v2/:resource/:idOrSlug", async (req, res, next) => {
     try {
       const resource = req.params.resource as Resource;
+      if (resource === "users") {
+        const user = await getUserById(Number(req.params.idOrSlug));
+        if (!user) return wpError(res, 404, "rest_user_invalid_id", "Invalid user ID.");
+        return res.json(userResponse(user));
+      }
       if (resource !== "posts" && resource !== "pages") return wpError(res, 404, "rest_no_route", "No route was found matching the URL and request method.");
       const type = resource === "posts" ? "post" : "page";
       const id = asNumber(req.params.idOrSlug);

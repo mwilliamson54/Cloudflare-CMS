@@ -2,7 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const repository = vi.hoisted(() => ({ listContentEntries: vi.fn(), getContentEntry: vi.fn(), getContentEntryBySlug: vi.fn(), createContentEntry: vi.fn(), updateContentEntry: vi.fn(), deleteContentEntry: vi.fn(), trashContentEntry: vi.fn(), restoreContentEntry: vi.fn() }));
+const repository = vi.hoisted(() => ({ listContentEntries: vi.fn(), getContentEntry: vi.fn(), getContentEntryBySlug: vi.fn(), getUserById: vi.fn(), listUsers: vi.fn(), createContentEntry: vi.fn(), updateContentEntry: vi.fn(), deleteContentEntry: vi.fn(), trashContentEntry: vi.fn(), restoreContentEntry: vi.fn() }));
 const auth = vi.hoisted(() => ({ authenticateRestRequest: vi.fn() }));
 
 vi.mock("../db", async () => ({ ...(await vi.importActual<typeof import("../db")>("../db")), ...repository }));
@@ -25,6 +25,7 @@ describe("WordPress REST adapter", () => {
     vi.clearAllMocks();
     repository.listContentEntries.mockResolvedValue({ entries: [published], total: 23 });
     repository.getContentEntry.mockResolvedValue(published); repository.getContentEntryBySlug.mockResolvedValue(published);
+    repository.getUserById.mockResolvedValue({ id: 9, name: "Editorial Author", email: "private@example.com", role: "author", createdAt: new Date("2026-08-14T00:00:00.000Z") }); repository.listUsers.mockResolvedValue([{ id: 9, name: "Editorial Author", email: "private@example.com", role: "author", createdAt: new Date("2026-08-14T00:00:00.000Z") }, { id: 10, name: "Guest Writer", email: "guest@example.com", role: "author", createdAt: new Date("2026-08-14T00:00:00.000Z") }]);
     repository.createContentEntry.mockImplementation(async (input: unknown) => ({ ...published, ...(input as object) }));
     repository.updateContentEntry.mockResolvedValue(published); repository.deleteContentEntry.mockResolvedValue(true); repository.trashContentEntry.mockResolvedValue({ ...published, trashedAt: new Date("2026-08-15T00:00:00.000Z") }); repository.restoreContentEntry.mockResolvedValue(published);
     auth.authenticateRestRequest.mockResolvedValue({ user: { id: 9, role: "author" }, scopes: ["content:write"] });
@@ -44,6 +45,16 @@ describe("WordPress REST adapter", () => {
     expect(response.status).toBe(200);
     expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "page", publishedOnly: true, query: "studio", page: 3, perPage: 5 });
     expect(response.headers.get("x-wp-total")).toBe("23");
+  });
+
+  it("returns paginated public user identity fields without email or role disclosure", async () => {
+    const collection = await request("/api/wp/v2/users?page=1&per_page=1");
+    expect(collection.headers.get("x-wp-total")).toBe("2");
+    expect(collection.headers.get("x-wp-totalpages")).toBe("2");
+    await expect(collection.json()).resolves.toEqual([{ id: 9, name: "Editorial Author", slug: "author-9", description: "", link: "/author/9", avatar_urls: {}, registered_date: expect.any(String) }]);
+
+    const individual = await request("/api/wp/v2/users/9");
+    await expect(individual.json()).resolves.toEqual({ id: 9, name: "Editorial Author", slug: "author-9", description: "", link: "/author/9", avatar_urls: {}, registered_date: expect.any(String) });
   });
 
   it.each(["draft", "scheduled", "archived"] as const)("does not expose an individual %s entry", async status => {
