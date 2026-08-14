@@ -10,6 +10,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "build:pages": "vite build",
     "cf:d1:migrate": "pnpm dlx wrangler d1 execute atelier-cms --remote --file=migrations/0001_cms_core.sql",
@@ -84,6 +85,7 @@
   },
   "devDependencies": {
     "@builder.io/vite-plugin-jsx-loc": "^0.1.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.3",
     "@types/express": "4.17.21",

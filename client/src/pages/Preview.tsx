@@ -10,7 +10,7 @@ import { Link, useParams } from "wouter";
 export function PreviewArticle() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
-  const preview = trpc.cms.content.preview.useQuery({ id }, { enabled: Number.isInteger(id) && id > 0 });
+  const preview = trpc.cms.content.preview.useQuery({ id }, { enabled: Number.isInteger(id) && id > 0, retry: false });
 
   if (preview.isLoading) return <><FashionHeader /><main className="mx-auto max-w-3xl px-5 py-24 text-stone-500">Loading protected preview…</main></>;
   if (!preview.data) return <><Seo title="Preview unavailable — Atelier Journal" description="This protected preview is unavailable." canonicalPath={`/preview/${params.id}`} noindex /><FashionHeader /><main className="mx-auto max-w-3xl px-5 py-24"><h1 className="font-serif text-5xl">Preview unavailable</h1><p className="mt-5 text-stone-600">Sign in with an account that has access to this entry, or return to the editorial desk.</p><Link href="/admin/posts" className="mt-6 inline-flex items-center gap-2 text-sm underline"><ArrowLeft className="h-4 w-4" />Return to CMS</Link></main><FashionFooter /></>;
