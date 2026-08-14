@@ -244,6 +244,18 @@ export async function updateContentEntry(id: number, input: Partial<CreateConten
   return getContentEntry(id);
 }
 
+/** Removes an entry and its join-table relations while preserving child pages as top-level entries. */
+export async function deleteContentEntry(id: number) {
+  const db = await requireDb();
+  const existing = await getContentEntry(id);
+  if (!existing) return false;
+  await db.delete(contentCategories).where(eq(contentCategories.contentEntryId, id));
+  await db.delete(contentTags).where(eq(contentTags.contentEntryId, id));
+  await db.update(contentEntries).set({ parentId: null }).where(eq(contentEntries.parentId, id));
+  await db.delete(contentEntries).where(eq(contentEntries.id, id));
+  return true;
+}
+
 export async function getContentEntry(id: number) {
   const db = await requireDb();
   const entry = (await db.select().from(contentEntries).where(eq(contentEntries.id, id)).limit(1))[0] ?? null;

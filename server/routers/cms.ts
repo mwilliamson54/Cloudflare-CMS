@@ -9,6 +9,7 @@ import {
   createCustomContentType,
   createTag,
   deleteCategory,
+  deleteContentEntry,
   deleteMediaRecord,
   deleteTag,
   getContentEntry,
@@ -133,6 +134,12 @@ export const cmsRouter = router({
         if (input.values.status === "published" || input.values.status === "scheduled") requireCapability(ctx.user, "content:publish");
         return updateContentEntry(input.id, { ...input.values, bodyHtml: input.values.bodyHtml === undefined ? undefined : sanitizeRichHtml(input.values.bodyHtml) });
       }),
+    delete: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const entry = await getContentEntry(input.id);
+      if (!entry) throw new Error("Content entry not found.");
+      requireEntryOwnership(ctx.user, entry);
+      return { deleted: await deleteContentEntry(input.id) };
+    }),
   }),
   users: router({
     list: procedureWithCapability("users:manage").query(listUsers),
