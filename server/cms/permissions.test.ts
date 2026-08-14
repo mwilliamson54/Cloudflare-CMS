@@ -16,6 +16,9 @@ describe("CMS role policy", () => {
     expect(can("subscriber", "content:write")).toBe(false);
     expect(can("viewer", "content:read")).toBe(true);
     expect(allCapabilities.filter(capability => capability !== "content:read").every(capability => !can("viewer", capability))).toBe(true);
+    expect(["author", "contributor", "subscriber", "viewer"].every(role => !can(role as any, "taxonomy:write"))).toBe(true);
+    expect(["author", "contributor", "subscriber", "viewer"].every(role => !can(role as any, "site:manage"))).toBe(true);
+    expect(["editor", "author", "contributor", "subscriber", "viewer"].every(role => !can(role as any, "users:manage"))).toBe(true);
   });
 
   it("restricts author and contributor mutations to their own content", () => {

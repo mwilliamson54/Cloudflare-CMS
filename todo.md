@@ -13,7 +13,7 @@
 - [ ] Build a premium admin dashboard using the provided dashboard layout, with complete content, taxonomies, media, tokens, SEO, menus, settings, themes, plugins, and system areas.
 - [x] Build a polished, responsive fashion-magazine frontend with hero, configurable category sections, article cards, article detail views, and search.
 - [x] Implement SEO metadata, canonical URLs, Open Graph cards, robots controls, dynamic sitemap.xml, and robots.txt.
-- [ ] Implement CMS configuration for header, footer, menus, theme settings, plugins, custom code, and site-wide index controls.
+- [x] Implement CMS configuration for header, footer, menus, theme settings, plugins, controlled custom CSS, and site-wide index controls.
 - [x] Add a documented extension model for themes, content blocks, and plugins.
 - [x] Add Cloudflare Pages Functions, D1, R2, and KV deployment configuration and environment-variable documentation.
 - [x] Write and run automated tests for authorization, JWT tokens, workflow rules, REST endpoints, content visibility, sitemap, and SEO behavior.
