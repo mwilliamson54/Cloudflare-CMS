@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, like, or } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNull, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   apiTokens,
@@ -305,7 +305,8 @@ export async function listContentEntries(options: {
     .orderBy(desc(contentEntries.publishedAt), desc(contentEntries.updatedAt))
     .limit(perPage)
     .offset((page - 1) * perPage);
-  return { entries: await Promise.all(rows.map(hydrateEntry)), total: rows.length };
+  const totalRow = (await db.select({ value: count() }).from(contentEntries).where(and(...conditions)))[0];
+  return { entries: await Promise.all(rows.map(hydrateEntry)), total: Number(totalRow?.value ?? 0) };
 }
 
 async function hydrateEntry(entry: typeof contentEntries.$inferSelect) {
