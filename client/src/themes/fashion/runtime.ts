@@ -12,3 +12,8 @@ export const BUNDLED_THEME_KEY = "fashion-editorial" as const;
 export function resolvePublicTheme(themeKey: unknown) {
   return themeKey === BUNDLED_THEME_KEY ? fashionTheme : fashionTheme;
 }
+
+/** Resolves untyped public site settings without exposing a multi-theme execution surface. */
+export function resolvePublicThemeFromSettings(settings?: Record<string, unknown> | null) {
+  return resolvePublicTheme(settings?.theme);
+}

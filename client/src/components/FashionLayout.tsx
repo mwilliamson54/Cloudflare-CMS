@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { resolvePublicTheme } from "@/themes/fashion/runtime";
+import { resolvePublicThemeFromSettings } from "@/themes/fashion/runtime";
 import { ArrowUpRight, Instagram, Menu, Search, X } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
 
 export function FashionHeader() {
   const [searchOpen, setSearchOpen] = useState(false); const [query, setQuery] = useState(""); const [menuOpen, setMenuOpen] = useState(false); const [, setLocation] = useLocation();
   const settings = trpc.site.settings.useQuery();
   const menus = trpc.site.menus.useQuery();
-  const theme = resolvePublicTheme(settings.data?.theme); const title = typeof settings.data?.siteTitle === "string" ? settings.data.siteTitle : theme.name;
+  const theme = resolvePublicThemeFromSettings(settings.data); const title = typeof settings.data?.siteTitle === "string" ? settings.data.siteTitle : theme.name;
   const headerMenu = menus.data?.find(menu => menu.location === "header");
   const navigation = headerMenu?.items.length ? headerMenu.items.map(item => ({ label: item.label, href: item.url || "/" })) : theme.navigation;
   function submitSearch(event: React.FormEvent) { event.preventDefault(); if (query.trim()) { setLocation(`/search?q=${encodeURIComponent(query.trim())}`); setSearchOpen(false); } }
@@ -18,11 +18,11 @@ export function FashionHeader() {
 }
 
 export function FashionFooter() {
-  const settings = trpc.site.settings.useQuery(); const theme = resolvePublicTheme(settings.data?.theme); const title = typeof settings.data?.siteTitle === "string" ? settings.data.siteTitle : theme.name; const tagline = typeof settings.data?.footerTagline === "string" ? settings.data.footerTagline : theme.tagline; const location = typeof settings.data?.footerLocation === "string" ? settings.data.footerLocation : "London · New York · Everywhere"; const instagram = typeof settings.data?.footerInstagramUrl === "string" ? settings.data.footerInstagramUrl : "https://www.instagram.com";
+  const settings = trpc.site.settings.useQuery(); const theme = resolvePublicThemeFromSettings(settings.data); const title = typeof settings.data?.siteTitle === "string" ? settings.data.siteTitle : theme.name; const tagline = typeof settings.data?.footerTagline === "string" ? settings.data.footerTagline : theme.tagline; const location = typeof settings.data?.footerLocation === "string" ? settings.data.footerLocation : "London · New York · Everywhere"; const instagram = typeof settings.data?.footerInstagramUrl === "string" ? settings.data.footerInstagramUrl : "https://www.instagram.com";
   return <footer className="bg-[#30231b] text-[#f8f1e7]"><div className="mx-auto grid max-w-[1400px] gap-10 px-5 py-16 md:grid-cols-[1.2fr_1fr_1fr] md:px-9"><div><p className="font-serif text-3xl tracking-[0.08em]">{title.toUpperCase()}</p><p className="mt-4 max-w-sm text-sm leading-6 text-[#d9c7b8]">{tagline}</p></div><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d9a975]">Explore</p><div className="mt-5 grid gap-3">{theme.navigation.map(item => <Link key={item.href} href={item.href} className="text-sm text-[#f8f1e7] transition hover:text-[#d9a975]">{item.label}</Link>)}</div></div><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d9a975]">In good company</p><div className="mt-5 grid gap-3"><a href="#newsletter" className="text-sm text-[#f8f1e7] transition hover:text-[#d9a975]">Newsletter</a><a href={instagram} className="flex items-center gap-2 text-sm text-[#f8f1e7] transition hover:text-[#d9a975]"><Instagram className="h-4 w-4" />Instagram</a><span className="text-sm text-[#d9c7b8]">{location}</span></div></div></div><div className="border-t border-white/10 px-5 py-5 text-center text-xs text-[#c5b2a1]">© {new Date().getFullYear()} {title}. All rights reserved.</div></footer>;
 }
 
 export function Newsletter() {
-  const settings = trpc.site.settings.useQuery(); const theme = resolvePublicTheme(settings.data?.theme);
+  const settings = trpc.site.settings.useQuery(); const theme = resolvePublicThemeFromSettings(settings.data);
   return <section id="newsletter" className="bg-[#e7d6c4]"><div className="mx-auto flex max-w-[1100px] flex-col items-center px-5 py-20 text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#916345]">Newsletter</p><h2 className="mt-3 font-serif text-4xl text-[#30231b] md:text-5xl">{theme.newsletterTitle}</h2><p className="mt-4 max-w-xl text-sm leading-6 text-[#584337]">{theme.newsletterDescription}</p><form onSubmit={event => { event.preventDefault(); }} className="mt-7 flex w-full max-w-md gap-2"><Input type="email" required placeholder="Your email address" className="border-[#c7aa92] bg-white" /><Button type="submit" className="shrink-0">Subscribe <ArrowUpRight className="ml-1 h-4 w-4" /></Button></form></div></section>;
 }
