@@ -11,6 +11,7 @@ describe("Cloudflare sitemap function", () => {
     const response = await onRequestGet({ env: { CMS_DB: { prepare }, CMS_ORIGIN: "https://atelier.example" }, request: new Request("https://atelier.example/sitemap.xml") });
 
     expect(prepare).toHaveBeenLastCalledWith(expect.stringContaining("e.trashed_at IS NULL"));
+    expect(response.headers.get("cache-control")).toBe("public, max-age=300");
     await expect(response.text()).resolves.toContain("https://atelier.example/blog/visible-story");
   });
 });
