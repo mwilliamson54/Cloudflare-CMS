@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { contentTypes } from "../../drizzle/schema";
 import { createContentEntry, createCustomContentType, deleteContentEntry, getDb, updateContentEntry } from "../db";
+import { cmsRouter } from "./cms";
 import { siteRouter } from "./site";
 
 let contentTypeId: number | undefined;
@@ -38,5 +39,29 @@ describe("real repository custom-entry public visibility", () => {
     await expect(caller.customEntry({ contentTypeKey, slug })).resolves.toBeNull();
     await updateContentEntry(entryId!, { status: "published" });
     await expect(caller.customEntry({ contentTypeKey, slug })).resolves.toMatchObject({ id: entryId, slug, status: "published", fieldData: { season: "autumn" } });
+  });
+
+  it("supports the complete custom-entry administration lifecycle while preserving public state isolation", async () => {
+    const admin = cmsRouter.createCaller({ user: { id: 900_002, role: "admin" } } as any);
+    const publicCaller = siteRouter.createCaller({} as any);
+    const created = await admin.content.create({ contentTypeKey, title: "Scheduled lookbook", slug, status: "scheduled", scheduledAt: new Date(Date.now() + 60_000), fieldData: { season: "winter" } });
+    entryId = created?.id;
+    expect(entryId).toBeTypeOf("number");
+    await expect(admin.content.get({ id: entryId! })).resolves.toMatchObject({ status: "scheduled", fieldData: { season: "winter" } });
+    await expect(admin.content.list({ contentTypeKey, status: "scheduled" })).resolves.toMatchObject({ entries: [expect.objectContaining({ id: entryId, status: "scheduled" })] });
+    await expect(publicCaller.customEntry({ contentTypeKey, slug })).resolves.toBeNull();
+
+    await admin.content.update({ id: entryId!, values: { status: "published", title: "Published lookbook" } });
+    await expect(publicCaller.customEntry({ contentTypeKey, slug })).resolves.toMatchObject({ id: entryId, title: "Published lookbook", status: "published" });
+
+    await admin.content.update({ id: entryId!, values: { status: "archived" } });
+    await expect(publicCaller.customEntry({ contentTypeKey, slug })).resolves.toBeNull();
+
+    await admin.content.trash({ id: entryId! });
+    await expect(admin.content.list({ contentTypeKey, trashed: true })).resolves.toMatchObject({ entries: [expect.objectContaining({ id: entryId })] });
+    await admin.content.restore({ id: entryId! });
+    await admin.content.delete({ id: entryId! });
+    entryId = undefined;
+    await expect(admin.content.get({ id: created!.id })).resolves.toBeNull();
   });
 });

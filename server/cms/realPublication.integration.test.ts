@@ -86,4 +86,47 @@ describe("real repository REST publication lifecycle", () => {
     const pageSitemap = await request("/sitemap.xml");
     await expect(pageSitemap.text()).resolves.toContain(`/${pageSlug}`);
   });
+
+  it("supports real post and page read, update, archive, trash, and permanent deletion semantics", async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const post = await request("/api/wp/v2/posts", { method: "POST", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ title: `Lifecycle post ${suffix}`, slug: `lifecycle-post-${suffix}`, status: "published", content: { raw: "Initial post copy" } }) });
+    const postBody = await post.json() as { id: number };
+    createdIds.push(postBody.id);
+    await expect((await request(`/api/wp/v2/posts/${postBody.id}`)).json()).resolves.toMatchObject({ id: postBody.id, content: { raw: "Initial post copy" } });
+    await expect((await request(`/api/wp/v2/posts/${postBody.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ content: { raw: "Revised post copy" }, status: "archived" }) })).json()).resolves.toMatchObject({ id: postBody.id, status: "archived" });
+    expect((await request(`/api/wp/v2/posts/${postBody.id}`)).status).toBe(404);
+    expect((await request(`/api/wp/v2/posts/${postBody.id}`, { method: "DELETE", headers: { authorization: "Bearer real-db-token" } })).status).toBe(200);
+    expect((await request(`/api/wp/v2/posts/${postBody.id}?force=true`, { method: "DELETE", headers: { authorization: "Bearer real-db-token" } })).status).toBe(200);
+    createdIds.splice(createdIds.indexOf(postBody.id), 1);
+
+    const page = await request("/api/wp/v2/pages", { method: "POST", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ title: `Lifecycle page ${suffix}`, slug: `lifecycle-page-${suffix}`, status: "published", content: { raw: "Initial page copy" } }) });
+    const pageBody = await page.json() as { id: number };
+    createdIds.push(pageBody.id);
+    await expect((await request(`/api/wp/v2/pages/${pageBody.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ title: { raw: `Updated lifecycle page ${suffix}` } }) })).json()).resolves.toMatchObject({ id: pageBody.id, title: { rendered: `Updated lifecycle page ${suffix}` } });
+    await expect((await request(`/api/wp/v2/pages/${pageBody.id}`)).json()).resolves.toMatchObject({ id: pageBody.id, title: { rendered: `Updated lifecycle page ${suffix}` } });
+    expect((await request(`/api/wp/v2/pages/${pageBody.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ status: "archived" }) })).status).toBe(200);
+    expect((await request(`/api/wp/v2/pages/${pageBody.id}`)).status).toBe(404);
+    await expect((await request(`/api/wp/v2/pages?search=${encodeURIComponent(`Updated lifecycle page ${suffix}`)}`)).json()).resolves.toEqual([]);
+    await expect((await request("/sitemap.xml")).text()).resolves.not.toContain(`lifecycle-page-${suffix}`);
+    expect((await request(`/api/wp/v2/pages/${pageBody.id}?force=true`, { method: "DELETE", headers: { authorization: "Bearer real-db-token" } })).status).toBe(200);
+    createdIds.splice(createdIds.indexOf(pageBody.id), 1);
+  });
+
+  it.each(["posts", "pages"] as const)("keeps a scheduled %s out of public reads and the sitemap until publication", async resource => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const title = `Scheduled ${resource} ${suffix}`;
+    const slug = `scheduled-${resource}-${suffix}`;
+    const scheduled = await request(`/api/wp/v2/${resource}`, { method: "POST", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ title, slug, status: "scheduled", date: new Date(Date.now() + 60_000).toISOString(), content: { raw: "Scheduled editorial copy" } }) });
+    expect(scheduled.status).toBe(201);
+    const body = await scheduled.json() as { id: number };
+    createdIds.push(body.id);
+
+    await expect((await request(`/api/wp/v2/${resource}?search=${encodeURIComponent(title)}`)).json()).resolves.toEqual([]);
+    expect((await request(`/api/wp/v2/${resource}/${body.id}`)).status).toBe(404);
+    await expect((await request("/sitemap.xml")).text()).resolves.not.toContain(slug);
+
+    expect((await request(`/api/wp/v2/${resource}/${body.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ status: "published" }) })).status).toBe(200);
+    await expect((await request(`/api/wp/v2/${resource}?search=${encodeURIComponent(title)}`)).json()).resolves.toMatchObject([{ id: body.id, slug, status: "published" }]);
+    await expect((await request("/sitemap.xml")).text()).resolves.toContain(resource === "posts" ? `/blog/${slug}` : `/${slug}`);
+  });
 });
