@@ -243,7 +243,7 @@ function Overview() {
 
 export default function Admin() {
   const [location] = useLocation(); const { user } = useAuth(); const bootstrap = trpc.cms.bootstrap.useMutation();
-  useEffect(() => { bootstrap.mutate(); }, []);
+  useEffect(() => { if (user?.role === "admin") bootstrap.mutate(); }, [user?.role]);
   const customTypeKey = location.match(/\/admin\/types\/([^/]+)/)?.[1];
   const screen = useMemo(() => customTypeKey ? <ContentTable type={customTypeKey} /> : location.includes("/types") ? <ContentTypesPanel /> : location.includes("/posts") ? <ContentTable type="post" /> : location.includes("/pages") ? <ContentTable type="page" /> : location.includes("/media") ? <MediaPanel /> : location.includes("/taxonomy") ? <TaxonomyPanel /> : location.includes("/menus") ? <MenuPanel /> : location.includes("/tokens") ? <TokenPanel /> : location.includes("/users") ? <UsersPanel /> : location.includes("/appearance") ? <AppearancePanel /> : location.includes("/settings") ? <SettingsPanel /> : <Overview />, [location, customTypeKey]);
   return <DashboardLayout>{["viewer", "subscriber"].includes(user?.role || "") ? <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">You have read-only access. Content management actions are unavailable.</div> : null}{screen}</DashboardLayout>;
