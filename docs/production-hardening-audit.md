@@ -47,3 +47,7 @@ The plugin setting is an explicit allowlist rather than a plugin upload channel.
 ## REST Contract Evidence Added
 
 The local WordPress-style adapter now has end-to-end HTTP contract tests. They confirm that post collections request only published content, preserve `search`, `page`, and `per_page` inputs, return `X-WP-Total` and `X-WP-TotalPages`, and render WordPress-compatible response fields. They also verify individual drafts are treated as non-public, missing resources use the expected `rest_post_invalid_id` error shape, and an authenticated post creation attaches the verified token subject as author before emitting a `201` response.
+
+## Structured Markdown Authoring
+
+The Markdown mode now treats the article body as an ordered sequence of portable Markdown blocks. Editors can insert registered core or enabled-plugin blocks, edit each block independently, move it up or down, and remove it without hand-managing separator syntax. The persisted format remains ordinary Markdown separated by blank lines, so REST responses, previews, extensions, and export paths retain a stable text contract. Visual and source-HTML modes remain available; source-mode previews stay sandboxed and all supplied HTML continues to pass through the server-side allowlist sanitizer before persistence.

@@ -52,3 +52,4 @@
 - [x] Add administrator-only persisted activation controls for the bundled Reading Time plugin, including public-hook and editor-block gating.
 - [ ] Wire persisted theme selection into the public shell or explicitly constrain the system to a single immutable theme, with runtime integration tests.
 - [x] Add local WordPress REST contract tests for published visibility, search and pagination headers, unpublished single-resource denial, authenticated publication, and error shape.
+- [x] Add structured Markdown block controls for insertion, ordering, and removal while keeping the existing multi-mode source and preview workflow.
