@@ -9,7 +9,7 @@ The Cloudflare Pages adapter exposes WordPress-style paths below `/api/wp/v2`. C
 | `/api/wp/v2/pages` | `GET`, `POST` | List published pages or create a page with a JWT that has `content:write`. |
 | `/api/wp/v2/pages/{id-or-slug}` | `GET` | Fetch one published page. |
 | `/api/wp/v2/media` | `GET`, `POST` | List media or upload base64-encoded media with `media:write`. |
-| `/api/wp/v2/media/{id}` | `GET` | Fetch one media object. |
+| `/api/wp/v2/media/{id}` | `GET`, `PATCH` | Fetch a media object or replace its file with `media:write` while preserving its ID. |
 | `/api/wp/v2/categories` and `/tags` | `GET` | List taxonomy terms. |
 | `/api/wp/v2/categories/{id}` and `/tags/{id}` | `GET` | Fetch one taxonomy term. |
 | `/api/wp/v2/users` and `/users/{id}` | `GET` | Fetch public author identity fields only. |
@@ -38,3 +38,11 @@ curl -X POST "$CMS_ORIGIN/api/wp/v2/posts" \
 `POST /api/wp/v2/media` accepts `fileName`, `mimeType`, `dataBase64`, optional `alt_text`, and optional `title`. The deployed adapter writes directly to the `CMS_MEDIA` R2 binding with a `uploads/YYYY/MM/u{userId}/` key. Supported types are JPEG, PNG, WebP, AVIF, GIF, and PDF. Each object is limited to 10 MB.
 
 > The public media route is `/media/{key}`. Metadata is persisted in D1; media bytes remain in R2.
+
+## Collections and Pagination
+
+The `posts`, `pages`, `media`, and `users` collections accept `page` and `per_page` parameters; `per_page` is capped at 100. Their responses include `X-WP-Total` and `X-WP-TotalPages` headers. Production post and page collections also accept `search`, which filters title, excerpt, and body content before calculating both the rows and pagination totals.
+
+## Media Replacement
+
+`PATCH /api/wp/v2/media/{id}` accepts the same validated file fields as upload: `fileName`, `mimeType`, and `dataBase64`. The CMS writes the replacement to a new R2 object and updates the existing metadata record rather than creating a new media ID. Existing post and page references therefore remain valid.
