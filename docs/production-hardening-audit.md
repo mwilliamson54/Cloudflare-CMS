@@ -59,3 +59,5 @@ Paginated content listings no longer hydrate categories and tags with two additi
 ## Structured Markdown Authoring
 
 The Markdown mode now treats the article body as an ordered sequence of portable Markdown blocks. Editors can insert registered core or enabled-plugin blocks, edit each block independently, move it up or down, and remove it without hand-managing separator syntax. The persisted format remains ordinary Markdown separated by blank lines, so REST responses, previews, extensions, and export paths retain a stable text contract. Visual and source-HTML modes remain available; source-mode previews stay sandboxed and all supplied HTML continues to pass through the server-side allowlist sanitizer before persistence.
+
+Lifecycle regression coverage now additionally proves protected draft-preview ownership: an author can retrieve their own draft through the protected preview contract, while another author receives a forbidden response. This complements the existing create/update sanitizer assertions for visual/source HTML. Browser-level mode-switching and sandbox-frame interaction coverage remain an open integration-test item.
