@@ -40,7 +40,9 @@ These tests intentionally exercise the public contracts and permission boundary 
 
 ## Controlled Appearance Configuration
 
-The administration sidebar now exposes a dedicated **Appearance** workspace for `admin` users. It presents the bundled Fashion Editorial theme as the active public theme and lets an administrator activate or deactivate the bundled Reading Time plugin. The configuration is stored in `site_settings` as `theme` and `enabledPlugins`; the D1 baseline seeds both values, so Pages deployments receive the same default configuration.
+The administration sidebar now exposes a dedicated **Appearance** workspace for `admin` users. The first deployment deliberately operates in **bundled single-theme mode**: Fashion Editorial is the immutable public theme, while the theme key remains seeded as deployment metadata for a future reviewed theme registry. The workspace lets administrators activate or deactivate the bundled Reading Time plugin; it does not present a non-functional theme switcher. The D1 baseline seeds both `theme` and `enabledPlugins`, so Pages deployments receive the same default configuration.
+
+The public header, footer, and newsletter now resolve their presentation through the bundled-theme runtime boundary using that metadata. The resolver returns Fashion Editorial for the configured key and safely falls back to Fashion Editorial for missing or unsupported deployment metadata. This preserves a stable single-theme public shell today while defining the controlled resolver point where future reviewed themes can be registered.
 
 The plugin setting is an explicit allowlist rather than a plugin upload channel. On every public post query, the hook bus applies only registered filters whose plugin keys are enabled in that setting. The content editor similarly hides plugin-provided blocks when the plugin is inactive. This enables operational control while retaining a strict trusted-code boundary: unreviewed plugin keys fail schema validation, and only administrators have the `site:manage` capability required to read or change the configuration.
 

@@ -246,13 +246,13 @@ export const cmsRouter = router({
       const settings = await getSettings();
       return {
         activeTheme: settings.theme === "fashion-editorial" ? "fashion-editorial" : "fashion-editorial",
+        themeMode: "bundled-single-theme" as const,
         enabledPlugins: Array.isArray(settings.enabledPlugins) ? settings.enabledPlugins.filter((key): key is string => key === "reading-time") : [],
       };
     }),
     update: procedureWithCapability("site:manage")
-      .input(z.object({ activeTheme: z.literal("fashion-editorial"), enabledPlugins: z.array(z.literal("reading-time")).max(1) }))
+      .input(z.object({ enabledPlugins: z.array(z.literal("reading-time")).max(1) }))
       .mutation(({ ctx, input }) => setSettings([
-        { key: "theme", value: input.activeTheme, isPublic: true },
         { key: "enabledPlugins", value: input.enabledPlugins, isPublic: false },
       ], ctx.user.id)),
   }),

@@ -32,22 +32,21 @@ describe("CMS appearance configuration", () => {
   it.each(["editor", "viewer"] as const)("rejects %s from reading or updating theme and plugin activation", async role => {
     const caller = cmsRouter.createCaller(context(role));
     await expect(caller.appearance.get()).rejects.toMatchObject({ code: "FORBIDDEN" });
-    await expect(caller.appearance.update({ activeTheme: "fashion-editorial", enabledPlugins: [] })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.appearance.update({ enabledPlugins: [] })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
   it("returns the bundled configuration and persists administrator changes as controlled settings", async () => {
     const caller = cmsRouter.createCaller(context("admin"));
-    await expect(caller.appearance.get()).resolves.toEqual({ activeTheme: "fashion-editorial", enabledPlugins: ["reading-time"] });
-    await caller.appearance.update({ activeTheme: "fashion-editorial", enabledPlugins: [] });
+    await expect(caller.appearance.get()).resolves.toEqual({ activeTheme: "fashion-editorial", themeMode: "bundled-single-theme", enabledPlugins: ["reading-time"] });
+    await caller.appearance.update({ enabledPlugins: [] });
 
     expect(repository.setSettings).toHaveBeenCalledWith([
-      { key: "theme", value: "fashion-editorial", isPublic: true },
       { key: "enabledPlugins", value: [], isPublic: false },
     ], 8);
   });
 
   it("rejects activation of unreviewed plugin keys", async () => {
     const caller = cmsRouter.createCaller(context("admin"));
-    await expect(caller.appearance.update({ activeTheme: "fashion-editorial", enabledPlugins: ["third-party-plugin"] as never[] })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(caller.appearance.update({ enabledPlugins: ["third-party-plugin"] as never[] })).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 });
