@@ -8,7 +8,13 @@ describe("media storage contract", () => {
 
   it("accepts the documented image formats and retains a bounded upload policy", () => {
     for (const mime of ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"]) expect(allowedMimeTypes.has(mime)).toBe(true);
+    expect(allowedMimeTypes.has("application/pdf")).toBe(true);
     expect(allowedMimeTypes.has("image/svg+xml")).toBe(false);
     expect(MAX_UPLOAD_BYTES).toBe(10 * 1024 * 1024);
+  });
+
+  it("separates otherwise identical upload names by uploader key prefix", () => {
+    const now = new Date("2026-08-14T12:00:00Z");
+    expect(mediaKey("lookbook.webp", 42, now)).not.toBe(mediaKey("lookbook.webp", 43, now));
   });
 });
