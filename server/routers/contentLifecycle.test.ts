@@ -5,6 +5,8 @@ const repository = vi.hoisted(() => ({
   createContentEntry: vi.fn(),
   updateContentEntry: vi.fn(),
   deleteContentEntry: vi.fn(),
+  trashContentEntry: vi.fn(),
+  restoreContentEntry: vi.fn(),
   getContentEntry: vi.fn(),
   getMediaRecord: vi.fn(),
   updateMediaRecord: vi.fn(),
@@ -54,6 +56,7 @@ function entry(authorId: number, id = 33) {
     scheduledAt: null,
     publishedAt: null,
     archivedAt: null,
+    trashedAt: null,
     seoTitle: null,
     seoDescription: null,
     focusKeyword: null,
@@ -78,6 +81,8 @@ describe("CMS content lifecycle procedures", () => {
     repository.createContentEntry.mockImplementation(async (input: unknown) => ({ id: 71, ...input }));
     repository.updateContentEntry.mockImplementation(async (id: number, values: unknown) => ({ ...entry(12, id), ...values }));
     repository.deleteContentEntry.mockResolvedValue(true);
+    repository.trashContentEntry.mockImplementation(async (id: number) => ({ ...entry(12, id), status: "published", trashedAt: now }));
+    repository.restoreContentEntry.mockImplementation(async (id: number) => ({ ...entry(12, id), status: "published", trashedAt: null }));
     repository.getMediaRecord.mockResolvedValue({ id: 44, uploadedById: 12, fileName: "look.jpg" });
     repository.updateMediaRecord.mockImplementation(async (id: number, values: unknown) => ({ id, ...values }));
     repository.deleteMediaRecord.mockResolvedValue(undefined);
@@ -171,6 +176,31 @@ describe("CMS content lifecycle procedures", () => {
     const editor = cmsRouter.createCaller(context("editor", 4));
     await expect(editor.content.update({ id: 33, values: { status: "archived" } })).resolves.toMatchObject({ id: 33, status: "archived" });
     await expect(editor.content.delete({ id: 33 })).resolves.toEqual({ deleted: true });
+  });
+
+  it("moves owned posts, pages, and custom entries to trash and restores their existing publication status without permitting cross-author actions", async () => {
+    const owner = cmsRouter.createCaller(context("author", 12));
+    const otherAuthor = cmsRouter.createCaller(context("author", 99));
+    const entries = [
+      { ...entry(12, 33), contentTypeId: 1, title: "Owned post" },
+      { ...entry(12, 34), contentTypeId: 2, title: "Owned page" },
+      { ...entry(12, 35), contentTypeId: 3, title: "Owned lookbook" },
+    ];
+    repository.getContentEntry.mockImplementation(async (id: number) => entries.find(candidate => candidate.id === id) ?? null);
+    repository.trashContentEntry.mockImplementation(async (id: number) => ({ ...(entries.find(candidate => candidate.id === id)!), status: "published", trashedAt: now }));
+    repository.restoreContentEntry.mockImplementation(async (id: number) => ({ ...(entries.find(candidate => candidate.id === id)!), status: "published", trashedAt: null }));
+
+    for (const content of entries) {
+      await expect(owner.content.trash({ id: content.id })).resolves.toMatchObject({ id: content.id, status: "published", trashedAt: now });
+      await expect(owner.content.restore({ id: content.id })).resolves.toMatchObject({ id: content.id, status: "published", trashedAt: null });
+    }
+    expect(repository.trashContentEntry).toHaveBeenCalledWith(33);
+    expect(repository.trashContentEntry).toHaveBeenCalledWith(34);
+    expect(repository.trashContentEntry).toHaveBeenCalledWith(35);
+    await expect(otherAuthor.content.trash({ id: 33 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(repository.restoreContentEntry).toHaveBeenCalledWith(33);
+    expect(repository.restoreContentEntry).toHaveBeenCalledWith(34);
+    expect(repository.restoreContentEntry).toHaveBeenCalledWith(35);
   });
 
   it("enforces uploader ownership for author and contributor media updates, replacements, and deletion", async () => {

@@ -5,9 +5,9 @@ The Cloudflare Pages adapter exposes WordPress-style paths below `/api/wp/v2`. C
 | Endpoint | Methods | Purpose |
 | --- | --- | --- |
 | `/api/wp/v2/posts` | `GET`, `POST` | List published posts or create a post with a JWT that has `content:write`. |
-| `/api/wp/v2/posts/{id-or-slug}` | `GET` | Fetch one published post. |
+| `/api/wp/v2/posts/{id-or-slug}` | `GET`, `PATCH`, `DELETE` | Fetch a published post; update, restore, trash, or force-delete with a content-writing JWT. |
 | `/api/wp/v2/pages` | `GET`, `POST` | List published pages or create a page with a JWT that has `content:write`. |
-| `/api/wp/v2/pages/{id-or-slug}` | `GET` | Fetch one published page. |
+| `/api/wp/v2/pages/{id-or-slug}` | `GET`, `PATCH`, `DELETE` | Fetch a published page; update, restore, trash, or force-delete with a content-writing JWT. |
 | `/api/wp/v2/media` | `GET`, `POST` | List media or upload base64-encoded media with `media:write`. |
 | `/api/wp/v2/media/{id}` | `GET`, `PATCH` | Fetch a media object or replace its file with `media:write` while preserving its ID. |
 | `/api/wp/v2/categories` and `/tags` | `GET` | List taxonomy terms. |
@@ -61,4 +61,6 @@ Public post and page collections contain only `published` content. Requests for 
 
 Authentication and capability failures use the same stable shape: `{ "code", "message", "data": { "status" } }`. A missing or invalid bearer token yields `401`; a valid token without the required scope or publication capability yields `403`; development rate limiting returns `429` with `rest_rate_limited`. Unknown methods or resources return `404` with `rest_no_route`.
 
-`PATCH` and `DELETE /api/wp/v2/posts/{id}` and `/pages/{id}` require a JWT with the `content:write` scope. Authors and contributors may mutate or delete only their own entries; editors and administrators retain publication-wide editorial authority. Deletion is currently an explicit permanent-delete contract rather than WordPress trash-state emulation. A successful response returns `{ "deleted": true, "previous": { ... } }`, while a missing entry returns `rest_post_invalid_id` and a cross-owner mutation returns `cms_forbidden`.
+`PATCH` and `DELETE /api/wp/v2/posts/{id}` and `/pages/{id}` require a JWT with the `content:write` scope. Authors and contributors may mutate only their own entries; editors and administrators retain publication-wide editorial authority. The default `DELETE` is non-destructive: it sets a separate `trashed_at` timestamp while preserving the original required status (`draft`, `scheduled`, `published`, or `archived`). Trashed entries are excluded from public reads, archives, sitemap delivery, and scheduled-publication promotion.
+
+Use `PATCH ?restore=true` to restore a trashed entry to its preserved status. Use `DELETE ?force=true` only after review to permanently remove the content and its taxonomy relations; child pages are retained as top-level entries. Default trash responses contain `{ "deleted": false, "trashed": true, "previous": { ... }, "content": { ... } }`, while force deletion returns `{ "deleted": true, "previous": { ... } }`. Missing entries return `rest_post_invalid_id`, a cross-owner mutation returns `cms_forbidden`, and invalid trash transitions return `rest_invalid_status` with HTTP `409`.

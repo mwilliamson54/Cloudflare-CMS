@@ -27,6 +27,8 @@ import {
   revokeApiToken,
   updateCategory,
   updateContentEntry,
+  restoreContentEntry,
+  trashContentEntry,
   updateMediaRecord,
   updateUserRole,
   setSettings,
@@ -122,7 +124,7 @@ export const cmsRouter = router({
   }),
   content: router({
     list: procedureWithCapability("content:read")
-      .input(z.object({ contentTypeKey: z.string(), status: statusSchema.optional(), query: z.string().max(120).optional(), page: z.number().int().positive().optional(), perPage: z.number().int().positive().max(100).optional() }))
+      .input(z.object({ contentTypeKey: z.string(), status: statusSchema.optional(), trashed: z.boolean().optional(), query: z.string().max(120).optional(), page: z.number().int().positive().optional(), perPage: z.number().int().positive().max(100).optional() }))
       .query(async ({ input }) => listContentEntries(input)),
     get: procedureWithCapability("content:read").input(z.object({ id: z.number().int().positive() })).query(({ input }) => getContentEntry(input.id)),
     preview: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).query(async ({ ctx, input }) => {
@@ -149,6 +151,22 @@ export const cmsRouter = router({
       if (!entry) throw new Error("Content entry not found.");
       requireEntryOwnership(ctx.user, entry);
       return { deleted: await deleteContentEntry(input.id) };
+    }),
+    trash: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const entry = await getContentEntry(input.id);
+      if (!entry) throw new Error("Content entry not found.");
+      requireEntryOwnership(ctx.user, entry);
+      const trashed = await trashContentEntry(input.id);
+      if (!trashed) throw new Error("Content entry is already in the trash.");
+      return trashed;
+    }),
+    restore: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const entry = await getContentEntry(input.id);
+      if (!entry) throw new Error("Content entry not found.");
+      requireEntryOwnership(ctx.user, entry);
+      const restored = await restoreContentEntry(input.id);
+      if (!restored) throw new Error("Content entry is not in the trash.");
+      return restored;
     }),
   }),
   users: router({

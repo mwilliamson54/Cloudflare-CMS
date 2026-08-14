@@ -36,6 +36,13 @@
       "when": 1786702485537,
       "tag": "0004_white_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1786717420314,
+      "tag": "0005_gorgeous_the_fallen",
+      "breakpoints": true
     }
   ]
 }

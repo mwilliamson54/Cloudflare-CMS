@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS content_entries (
   scheduled_at TEXT,
   published_at TEXT,
   archived_at TEXT,
+  trashed_at TEXT,
   seo_title TEXT,
   seo_description TEXT,
   canonical_url TEXT,
@@ -63,6 +64,7 @@ CREATE TABLE IF NOT EXISTS content_entries (
   UNIQUE(content_type_id,slug)
 );
 CREATE INDEX IF NOT EXISTS idx_content_status_published ON content_entries(status,published_at);
+CREATE INDEX IF NOT EXISTS idx_content_trashed_at ON content_entries(trashed_at);
 CREATE INDEX IF NOT EXISTS idx_content_parent ON content_entries(parent_id);
 CREATE INDEX IF NOT EXISTS idx_content_template ON content_entries(template_key);
 CREATE TABLE IF NOT EXISTS categories (

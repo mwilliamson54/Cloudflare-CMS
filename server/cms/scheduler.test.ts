@@ -9,7 +9,7 @@ describe("scheduled publication worker", () => {
 
     await scheduler.scheduled({} as ScheduledController, { CMS_DB: { prepare } as unknown as D1Database });
 
-    expect(prepare).toHaveBeenCalledWith(expect.stringContaining("WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ?"));
+    expect(prepare).toHaveBeenCalledWith(expect.stringContaining("WHERE status = 'scheduled' AND trashed_at IS NULL AND scheduled_at IS NOT NULL AND scheduled_at <= ?"));
     expect(bind).toHaveBeenCalledWith(expect.any(String), expect.any(String));
     expect(run).toHaveBeenCalledTimes(1);
   });

@@ -2,7 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const repository = vi.hoisted(() => ({ listContentEntries: vi.fn(), getContentEntry: vi.fn(), getContentEntryBySlug: vi.fn(), createContentEntry: vi.fn(), updateContentEntry: vi.fn(), deleteContentEntry: vi.fn() }));
+const repository = vi.hoisted(() => ({ listContentEntries: vi.fn(), getContentEntry: vi.fn(), getContentEntryBySlug: vi.fn(), createContentEntry: vi.fn(), updateContentEntry: vi.fn(), deleteContentEntry: vi.fn(), trashContentEntry: vi.fn(), restoreContentEntry: vi.fn() }));
 const auth = vi.hoisted(() => ({ authenticateRestRequest: vi.fn() }));
 
 vi.mock("../db", async () => ({ ...(await vi.importActual<typeof import("../db")>("../db")), ...repository }));
@@ -11,7 +11,7 @@ vi.mock("./restAuth", () => auth);
 import { registerWordPressRestRoutes } from "./wpRest";
 
 let server: Server | undefined;
-const published = { id: 5, contentTypeId: 1, authorId: 9, title: "Published", slug: "published", excerpt: "A story", bodyMarkdown: "# Heading", bodyHtml: null, featuredMediaId: null, parentId: null, templateKey: "default", status: "published" as const, scheduledAt: null, publishedAt: new Date("2026-08-14T00:00:00.000Z"), archivedAt: null, seoTitle: null, seoDescription: null, focusKeyword: null, canonicalUrl: null, robotsIndex: true, robotsFollow: true, ogTitle: null, ogDescription: null, ogImageMediaId: null, fieldData: null, createdAt: new Date("2026-08-13T00:00:00.000Z"), updatedAt: new Date("2026-08-14T00:00:00.000Z"), categories: [], tags: [] };
+const published = { id: 5, contentTypeId: 1, authorId: 9, title: "Published", slug: "published", excerpt: "A story", bodyMarkdown: "# Heading", bodyHtml: null, featuredMediaId: null, parentId: null, templateKey: "default", status: "published" as const, scheduledAt: null, publishedAt: new Date("2026-08-14T00:00:00.000Z"), archivedAt: null, trashedAt: null, seoTitle: null, seoDescription: null, focusKeyword: null, canonicalUrl: null, robotsIndex: true, robotsFollow: true, ogTitle: null, ogDescription: null, ogImageMediaId: null, fieldData: null, createdAt: new Date("2026-08-13T00:00:00.000Z"), updatedAt: new Date("2026-08-14T00:00:00.000Z"), categories: [], tags: [] };
 
 async function request(path: string, init?: RequestInit) {
   const app = express(); app.use(express.json()); registerWordPressRestRoutes(app);
@@ -26,7 +26,7 @@ describe("WordPress REST adapter", () => {
     repository.listContentEntries.mockResolvedValue({ entries: [published], total: 23 });
     repository.getContentEntry.mockResolvedValue(published); repository.getContentEntryBySlug.mockResolvedValue(published);
     repository.createContentEntry.mockImplementation(async (input: unknown) => ({ ...published, ...(input as object) }));
-    repository.updateContentEntry.mockResolvedValue(published); repository.deleteContentEntry.mockResolvedValue(true);
+    repository.updateContentEntry.mockResolvedValue(published); repository.deleteContentEntry.mockResolvedValue(true); repository.trashContentEntry.mockResolvedValue({ ...published, trashedAt: new Date("2026-08-15T00:00:00.000Z") }); repository.restoreContentEntry.mockResolvedValue(published);
     auth.authenticateRestRequest.mockResolvedValue({ user: { id: 9, role: "author" }, scopes: ["content:write"] });
   });
   afterEach(async () => { await new Promise<void>(resolve => server?.close(() => resolve())); server = undefined; });
@@ -66,10 +66,23 @@ describe("WordPress REST adapter", () => {
     expect(repository.updateContentEntry).not.toHaveBeenCalled();
   });
 
-  it("permanently deletes an owned entry and returns the WordPress deletion envelope", async () => {
+  it("moves an owned entry to trash by default and returns the non-destructive deletion envelope", async () => {
     const response = await request("/api/wp/v2/posts/5", { method: "DELETE", headers: { authorization: "Bearer test" } });
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ deleted: true, previous: { id: 5, status: "published" } });
+    await expect(response.json()).resolves.toMatchObject({ deleted: false, trashed: true, previous: { id: 5, status: "published" }, content: { meta: { trashed_at: expect.any(String) } } });
+    expect(repository.trashContentEntry).toHaveBeenCalledWith(5);
+    expect(repository.deleteContentEntry).not.toHaveBeenCalled();
+  });
+
+  it("restores trashed content and requires force=true for permanent deletion", async () => {
+    repository.getContentEntry.mockResolvedValue({ ...published, trashedAt: new Date("2026-08-15T00:00:00.000Z") });
+    const restored = await request("/api/wp/v2/posts/5?restore=true", { method: "PATCH", headers: { authorization: "Bearer test", "content-type": "application/json" }, body: "{}" });
+    expect(restored.status).toBe(200);
+    expect(repository.restoreContentEntry).toHaveBeenCalledWith(5);
+
+    const deleted = await request("/api/wp/v2/posts/5?force=true", { method: "DELETE", headers: { authorization: "Bearer test" } });
+    expect(deleted.status).toBe(200);
+    await expect(deleted.json()).resolves.toMatchObject({ deleted: true, previous: { id: 5 } });
     expect(repository.deleteContentEntry).toHaveBeenCalledWith(5);
   });
 });

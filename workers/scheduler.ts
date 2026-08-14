@@ -12,7 +12,7 @@ export default {
     await env.CMS_DB.prepare(
       `UPDATE content_entries
        SET status = 'published', published_at = scheduled_at, updated_at = ?
-       WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= ?`,
+       WHERE status = 'scheduled' AND trashed_at IS NULL AND scheduled_at IS NOT NULL AND scheduled_at <= ?`,
     )
       .bind(now, now)
       .run();

@@ -32,8 +32,8 @@ async function resourceList(context: Context, resource: string) {
   const url = new URL(context.request.url); const page = Math.max(1, Number(url.searchParams.get("page")) || 1); const perPage = Math.min(100, Math.max(1, Number(url.searchParams.get("per_page")) || 10)); const search = url.searchParams.get("search")?.trim();
   if (resource === "posts" || resource === "pages") {
     const key = resource === "posts" ? "post" : "page"; const searchClause = search ? " AND (e.title LIKE ? OR e.excerpt LIKE ? OR e.body_markdown LIKE ?)" : ""; const searchBindings = search ? [`%${search}%`, `%${search}%`, `%${search}%`] : [];
-    const count = await context.env.CMS_DB.prepare(`SELECT COUNT(*) AS total FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND e.status='published'${searchClause}`).bind(key, ...searchBindings).first();
-    const rows = await context.env.CMS_DB.prepare(`SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND e.status='published'${searchClause} ORDER BY e.published_at DESC, e.updated_at DESC LIMIT ? OFFSET ?`).bind(key, ...searchBindings, perPage, (page - 1) * perPage).all();
+    const count = await context.env.CMS_DB.prepare(`SELECT COUNT(*) AS total FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND e.status='published' AND e.trashed_at IS NULL${searchClause}`).bind(key, ...searchBindings).first();
+    const rows = await context.env.CMS_DB.prepare(`SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND e.status='published' AND e.trashed_at IS NULL${searchClause} ORDER BY e.published_at DESC, e.updated_at DESC LIMIT ? OFFSET ?`).bind(key, ...searchBindings, perPage, (page - 1) * perPage).all();
     return json(rows.results.map((entry: any) => ({ id: entry.id, date: entry.published_at || entry.created_at, modified: entry.updated_at, slug: entry.slug, status: entry.status, type: key, link: `/blog/${entry.slug}`, title: { rendered: entry.title }, content: { rendered: html(entry.body_markdown), raw: entry.body_markdown || "" }, excerpt: { rendered: html(entry.excerpt), raw: entry.excerpt || "" }, author: entry.author_id, featured_media: entry.featured_media_id || 0, meta: { seo_title: entry.seo_title, seo_description: entry.seo_description, canonical_url: entry.canonical_url, robots_index: Boolean(entry.robots_index), robots_follow: Boolean(entry.robots_follow) } })), 200, { "X-WP-Total": String(count?.total || 0), "X-WP-TotalPages": String(Math.max(1, Math.ceil(Number(count?.total || 0) / perPage))) });
   }
   if (resource === "categories" || resource === "tags") return json((await context.env.CMS_DB.prepare(`SELECT * FROM ${resource} ORDER BY name`).all()).results);
@@ -44,7 +44,7 @@ async function resourceList(context: Context, resource: string) {
 export const onRequestGet = async (context: Context) => {
   const [resource, id] = segments(context); if (!resource) return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
   if (!id) return resourceList(context, resource); if (resource === "users") { const user = await context.env.CMS_DB.prepare("SELECT id,name,created_at FROM users WHERE id=? LIMIT 1").bind(id).first(); return user ? json({ id: user.id, name: user.name || "CMS author", slug: `author-${user.id}`, link: `/author/${user.id}`, description: "", avatar_urls: {}, registered_date: user.created_at }) : wpError(404, "rest_user_invalid_id", "Invalid user ID."); } if (resource === "categories" || resource === "tags" || resource === "media") { const resourceRow = await context.env.CMS_DB.prepare(`SELECT * FROM ${resource} WHERE id=? LIMIT 1`).bind(id).first(); return resourceRow ? json(resource === "media" ? { id: resourceRow.id, date: resourceRow.created_at, slug: resourceRow.file_name, source_url: resourceRow.url, alt_text: resourceRow.alt_text || "", caption: { rendered: resourceRow.caption || "" }, description: { rendered: resourceRow.description || "" }, media_type: String(resourceRow.mime_type || "").split("/")[0], mime_type: resourceRow.mime_type } : resourceRow) : wpError(404, "rest_post_invalid_id", "Invalid resource ID."); } if (resource !== "posts" && resource !== "pages") return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
-  const key = resource === "posts" ? "post" : "page"; const entry = await context.env.CMS_DB.prepare("SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND (e.id=? OR e.slug=?) AND e.status='published' LIMIT 1").bind(key, id, id).first();
+  const key = resource === "posts" ? "post" : "page"; const entry = await context.env.CMS_DB.prepare("SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND (e.id=? OR e.slug=?) AND e.status='published' AND e.trashed_at IS NULL LIMIT 1").bind(key, id, id).first();
   return entry ? json({ id: entry.id, date: entry.published_at || entry.created_at, modified: entry.updated_at, slug: entry.slug, status: entry.status, type: key, link: `/blog/${entry.slug}`, title: { rendered: entry.title }, content: { rendered: html(entry.body_markdown), raw: entry.body_markdown || "" }, excerpt: { rendered: html(entry.excerpt), raw: entry.excerpt || "" }, author: entry.author_id, featured_media: entry.featured_media_id || 0 }) : wpError(404, "rest_post_invalid_id", "Invalid post ID.");
 };
 export const onRequestPost = async (context: Context) => {
@@ -58,7 +58,27 @@ export const onRequestPost = async (context: Context) => {
 
 export const onRequestPatch = async (context: Context) => {
   const [resource, id] = segments(context);
-  if (resource !== "media" || !id) return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
+  if (!id) return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
+  if (resource === "posts" || resource === "pages") {
+    try {
+      const claims = await requireToken(context, "content:write"); const input = await context.request.json<any>(); const type = resource === "posts" ? "post" : "page";
+      const entry = await context.env.CMS_DB.prepare("SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND e.id=? LIMIT 1").bind(type, id).first();
+      if (!entry) return wpError(404, "rest_post_invalid_id", "Invalid post ID.");
+      if (["author", "contributor"].includes(claims.role) && Number(entry.author_id) !== Number(claims.sub)) return wpError(403, "cms_forbidden", "You may only manage content you authored.");
+      if (input.restore === true) {
+        if (!entry.trashed_at) return wpError(409, "rest_invalid_status", "Only trashed content can be restored.");
+        await context.env.CMS_DB.prepare("UPDATE content_entries SET trashed_at=NULL, updated_at=? WHERE id=?").bind(new Date().toISOString(), id).run();
+        return json({ id: Number(id), status: entry.status, trashed: false });
+      }
+      if (entry.trashed_at) return wpError(409, "rest_invalid_status", "Restore trashed content before editing it.");
+      const status = ["draft", "scheduled", "published", "archived"].includes(input.status) ? input.status : entry.status;
+      if ((status === "published" || status === "scheduled") && !["admin", "editor", "author"].includes(claims.role)) return wpError(403, "cms_forbidden", "This API token does not grant publishing access.");
+      const now = new Date().toISOString(); const scheduledAt = status === "scheduled" ? (input.date || entry.scheduled_at) : null; const publishedAt = status === "published" ? (entry.published_at || now) : null; const archivedAt = status === "archived" ? (entry.archived_at || now) : null;
+      await context.env.CMS_DB.prepare("UPDATE content_entries SET title=?,slug=?,excerpt=?,body_markdown=?,status=?,scheduled_at=?,published_at=?,archived_at=?,updated_at=? WHERE id=?").bind(String(input.title?.raw || input.title || entry.title), String(input.slug || entry.slug), input.excerpt?.raw || input.excerpt || entry.excerpt || null, input.content?.raw || input.content || entry.body_markdown || "", status, scheduledAt, publishedAt, archivedAt, now, id).run();
+      return json({ id: Number(id), status, slug: String(input.slug || entry.slug), title: { rendered: String(input.title?.raw || input.title || entry.title) } });
+    } catch (error) { return wpError(401, "cms_unauthorized", error instanceof Error ? error.message : "Authentication failed."); }
+  }
+  if (resource !== "media") return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
   try {
     const claims = await requireToken(context, "media:write");
     const input = await context.request.json<any>();
@@ -81,4 +101,22 @@ export const onRequestPatch = async (context: Context) => {
   } catch (error) {
     return wpError(401, "cms_unauthorized", error instanceof Error ? error.message : "Authentication failed.");
   }
+};
+
+export const onRequestDelete = async (context: Context) => {
+  const [resource, id] = segments(context); if (!id || (resource !== "posts" && resource !== "pages")) return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
+  try {
+    const claims = await requireToken(context, "content:write"); const type = resource === "posts" ? "post" : "page";
+    const entry = await context.env.CMS_DB.prepare("SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND e.id=? LIMIT 1").bind(type, id).first();
+    if (!entry) return wpError(404, "rest_post_invalid_id", "Invalid post ID.");
+    if (["author", "contributor"].includes(claims.role) && Number(entry.author_id) !== Number(claims.sub)) return wpError(403, "cms_forbidden", "You may only manage content you authored.");
+    const force = new URL(context.request.url).searchParams.get("force") === "true";
+    if (force) {
+      await context.env.CMS_DB.prepare("DELETE FROM content_categories WHERE content_entry_id=?").bind(id).run(); await context.env.CMS_DB.prepare("DELETE FROM content_tags WHERE content_entry_id=?").bind(id).run(); await context.env.CMS_DB.prepare("UPDATE content_entries SET parent_id=NULL WHERE parent_id=?").bind(id).run(); await context.env.CMS_DB.prepare("DELETE FROM content_entries WHERE id=?").bind(id).run();
+      return json({ deleted: true, previous: { id: Number(id), status: entry.status, slug: entry.slug } });
+    }
+    if (entry.trashed_at) return wpError(409, "rest_invalid_status", "Content is already in the trash.");
+    await context.env.CMS_DB.prepare("UPDATE content_entries SET trashed_at=?, updated_at=? WHERE id=?").bind(new Date().toISOString(), new Date().toISOString(), id).run();
+    return json({ deleted: false, trashed: true, previous: { id: Number(id), status: entry.status, slug: entry.slug } });
+  } catch (error) { return wpError(401, "cms_unauthorized", error instanceof Error ? error.message : "Authentication failed."); }
 };

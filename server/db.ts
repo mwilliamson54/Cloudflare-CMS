@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull, like, or } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   apiTokens,
@@ -263,6 +263,24 @@ export async function deleteContentEntry(id: number) {
   return true;
 }
 
+/** Moves an entry out of all normal and public views without changing its lifecycle status. */
+export async function trashContentEntry(id: number) {
+  const db = await requireDb();
+  const existing = await getContentEntry(id);
+  if (!existing || existing.trashedAt) return false;
+  await db.update(contentEntries).set({ trashedAt: new Date() }).where(eq(contentEntries.id, id));
+  return getContentEntry(id);
+}
+
+/** Restores an entry to the status it had before it was moved to the trash. */
+export async function restoreContentEntry(id: number) {
+  const db = await requireDb();
+  const existing = await getContentEntry(id);
+  if (!existing || !existing.trashedAt) return null;
+  await db.update(contentEntries).set({ trashedAt: null }).where(eq(contentEntries.id, id));
+  return getContentEntry(id);
+}
+
 export async function getContentEntry(id: number) {
   const db = await requireDb();
   const entry = (await db.select().from(contentEntries).where(eq(contentEntries.id, id)).limit(1))[0] ?? null;
@@ -275,7 +293,7 @@ export async function getContentEntryBySlug(contentTypeKey: string, slug: string
   const contentType = await getContentTypeByKey(contentTypeKey);
   if (!contentType) return null;
   const conditions = [eq(contentEntries.contentTypeId, contentType.id), eq(contentEntries.slug, slug)];
-  if (!includeUnpublished) conditions.push(eq(contentEntries.status, "published"));
+  if (!includeUnpublished) conditions.push(eq(contentEntries.status, "published"), isNull(contentEntries.trashedAt));
   const entry = (await db.select().from(contentEntries).where(and(...conditions)).limit(1))[0] ?? null;
   return entry ? hydrateEntry(entry) : null;
 }
@@ -287,6 +305,7 @@ export async function listContentEntries(options: {
   page?: number;
   perPage?: number;
   publishedOnly?: boolean;
+  trashed?: boolean;
 }) {
   const db = await requireDb();
   const contentType = await getContentTypeByKey(options.contentTypeKey);
@@ -294,6 +313,7 @@ export async function listContentEntries(options: {
   const conditions = [eq(contentEntries.contentTypeId, contentType.id)];
   if (options.status) conditions.push(eq(contentEntries.status, options.status));
   if (options.publishedOnly) conditions.push(eq(contentEntries.status, "published"));
+  conditions.push(options.trashed ? isNotNull(contentEntries.trashedAt) : isNull(contentEntries.trashedAt));
   if (options.query) {
     const pattern = `%${options.query.trim()}%`;
     conditions.push(or(like(contentEntries.title, pattern), like(contentEntries.excerpt, pattern))!);

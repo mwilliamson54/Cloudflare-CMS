@@ -11,6 +11,8 @@ import {
   listContentEntries,
   listMedia,
   listTags,
+  restoreContentEntry,
+  trashContentEntry,
   updateContentEntry,
 } from "../db";
 import { persistMediaReplacement, persistMediaUpload } from "./media";
@@ -77,6 +79,7 @@ function contentResponse(entry: Awaited<ReturnType<typeof getContentEntry>>) {
       canonical_url: entry.canonicalUrl,
       robots_index: entry.robotsIndex,
       robots_follow: entry.robotsFollow,
+      trashed_at: entry.trashedAt?.toISOString() ?? null,
     },
   };
 }
@@ -121,7 +124,7 @@ export function registerWordPressRestRoutes(app: Express) {
       const type = resource === "posts" ? "post" : "page";
       const id = asNumber(req.params.idOrSlug);
       const entry = id ? await getContentEntry(id) : await getContentEntryBySlug(type, req.params.idOrSlug);
-      if (!entry || entry.status !== "published") return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
+      if (!entry || entry.status !== "published" || entry.trashedAt) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
       return res.json(contentResponse(entry));
     } catch (error) { next(error); }
   });
@@ -184,6 +187,12 @@ export function registerWordPressRestRoutes(app: Express) {
       const existing = await getContentEntry(Number(req.params.id));
       if (!existing) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
       requireEntryOwnership(auth.user, existing);
+      if (req.query.restore === "true") {
+        const restored = await restoreContentEntry(existing.id);
+        if (!restored) return wpError(res, 409, "rest_invalid_status", "Only trashed content can be restored.");
+        return res.json(contentResponse(restored));
+      }
+      if (existing.trashedAt) return wpError(res, 409, "rest_invalid_status", "Restore trashed content before editing it.");
       const status = req.body.status;
       if (status === "published" || status === "scheduled") requireCapability(auth.user, "content:publish");
       const entry = await updateContentEntry(Number(req.params.id), {
@@ -207,9 +216,14 @@ export function registerWordPressRestRoutes(app: Express) {
       const existing = await getContentEntry(Number(req.params.id));
       if (!existing) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
       requireEntryOwnership(auth.user, existing);
-      const deleted = await deleteContentEntry(existing.id);
-      if (!deleted) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
-      return res.json({ deleted: true, previous: contentResponse(existing) });
+      if (req.query.force === "true") {
+        const deleted = await deleteContentEntry(existing.id);
+        if (!deleted) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
+        return res.json({ deleted: true, previous: contentResponse(existing) });
+      }
+      const trashed = await trashContentEntry(existing.id);
+      if (!trashed) return wpError(res, 409, "rest_invalid_status", "Content is already in the trash.");
+      return res.json({ deleted: false, trashed: true, previous: contentResponse(existing), content: contentResponse(trashed) });
     } catch (error) { next(error); }
   });
 

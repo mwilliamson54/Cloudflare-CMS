@@ -94,6 +94,7 @@ export const contentEntries = mysqlTable(
     scheduledAt: datetime("scheduledAt", { mode: "date" }),
     publishedAt: datetime("publishedAt", { mode: "date" }),
     archivedAt: datetime("archivedAt", { mode: "date" }),
+    trashedAt: datetime("trashedAt", { mode: "date" }),
     seoTitle: varchar("seoTitle", { length: 300 }),
     seoDescription: varchar("seoDescription", { length: 500 }),
     focusKeyword: varchar("focusKeyword", { length: 120 }),
@@ -110,6 +111,7 @@ export const contentEntries = mysqlTable(
   table => [
     uniqueIndex("content_entries_type_slug_unique").on(table.contentTypeId, table.slug),
     index("content_entries_status_published_index").on(table.status, table.publishedAt),
+    index("content_entries_trashed_at_index").on(table.trashedAt),
     index("content_entries_author_index").on(table.authorId),
     index("content_entries_featured_media_index").on(table.featuredMediaId),
     index("content_entries_parent_index").on(table.parentId),

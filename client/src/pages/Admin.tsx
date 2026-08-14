@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { ArrowDown, ArrowUp, BookOpenText, Check, Copy, FilePlus2, ImagePlus, KeyRound, LayoutDashboard, Loader2, Pencil, Plus, Search, Settings2, Tags, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, BookOpenText, Check, Copy, FilePlus2, ImagePlus, KeyRound, LayoutDashboard, Loader2, Pencil, Plus, RotateCcw, Search, Settings2, Tags, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Link, useLocation } from "wouter";
@@ -132,11 +132,27 @@ function ContentTable({ type }: { type: ContentKind }) {
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const result = trpc.cms.content.list.useQuery({ contentTypeKey: type, query: query || undefined, perPage: 30 });
+  const [showTrash, setShowTrash] = useState(false);
+  const result = trpc.cms.content.list.useQuery({ contentTypeKey: type, query: query || undefined, trashed: showTrash || undefined, perPage: 30 });
   const utils = trpc.useUtils();
-  const remove = trpc.cms.content.delete.useMutation({ onSuccess: () => { utils.cms.content.list.invalidate(); toast.success("Content entry deleted."); }, onError: error => toast.error(error.message) });
-  if (creating || editing) return <ContentEditor type={type} entry={editing || undefined} onDone={() => { utils.cms.content.list.invalidate(); setCreating(false); setEditing(null); }} />;
-  return <section><div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Editorial desk</p><h1 className="mt-1 font-serif text-4xl tracking-tight text-[#30221a]">{type === "post" ? "Stories" : type === "page" ? "Pages" : type.replace(/[-_]/g, " ")}</h1></div><Button onClick={() => setCreating(true)}><Plus className="mr-2 h-4 w-4" />New {type}</Button></div><div className="overflow-hidden rounded-2xl border border-[#e7dfd3] bg-white"><div className="border-b border-[#eee7dc] p-4"><div className="relative max-w-sm"><Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" /><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search by title or excerpt" className="pl-9" /></div></div>{result.isLoading ? <div className="p-12 text-center text-sm text-stone-500">Loading {type}s…</div> : result.data?.entries.length ? <div className="divide-y divide-[#eee7dc]">{result.data.entries.map(entry => <div className="flex items-center gap-4 p-4" key={entry.id}><button onClick={() => setEditing(entry)} className="min-w-0 flex-1 text-left"><p className="truncate font-medium text-[#30221a]">{entry.title}</p><p className="mt-1 truncate text-xs text-stone-500">/{entry.slug} · Updated {new Date(entry.updatedAt).toLocaleDateString()}</p></button><StatusBadge status={entry.status} /><Button variant="ghost" size="icon" onClick={() => setEditing(entry)} aria-label={`Edit ${entry.title}`}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => window.confirm(`Delete ${entry.title}? This cannot be undone.`) && remove.mutate({ id: entry.id })} aria-label={`Delete ${entry.title}`}><Trash2 className="h-4 w-4" /></Button></div>)}</div> : <div className="p-14 text-center"><FilePlus2 className="mx-auto h-6 w-6 text-stone-300" /><p className="mt-3 font-medium text-[#453229]">No {type}s yet</p><p className="mt-1 text-sm text-stone-500">Create the first piece from this workspace.</p></div>}</div></section>;
+  const refresh = () => { utils.cms.content.list.invalidate(); };
+  const trash = trpc.cms.content.trash.useMutation({ onSuccess: () => { refresh(); toast.success("Content moved to trash. You can restore it from the trash view."); }, onError: error => toast.error(error.message) });
+  const restore = trpc.cms.content.restore.useMutation({ onSuccess: () => { refresh(); toast.success("Content restored to its prior publication state."); }, onError: error => toast.error(error.message) });
+  const remove = trpc.cms.content.delete.useMutation({ onSuccess: () => { refresh(); toast.success("Content permanently deleted."); }, onError: error => toast.error(error.message) });
+  if (creating || editing) return <ContentEditor type={type} entry={editing || undefined} onDone={() => { refresh(); setCreating(false); setEditing(null); }} />;
+  const label = type === "post" ? "Stories" : type === "page" ? "Pages" : type.replace(/[-_]/g, " ");
+  return (
+    <section>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Editorial desk</p><h1 className="mt-1 font-serif text-4xl tracking-tight text-[#30221a]">{showTrash ? `${label} trash` : label}</h1></div>
+        <div className="flex gap-2"><Button variant="outline" onClick={() => setShowTrash(value => !value)}>{showTrash ? "Back to content" : "View trash"}</Button>{!showTrash && <Button onClick={() => setCreating(true)}><Plus className="mr-2 h-4 w-4" />New {type}</Button>}</div>
+      </div>
+      <div className="overflow-hidden rounded-2xl border border-[#e7dfd3] bg-white">
+        <div className="border-b border-[#eee7dc] p-4"><div className="relative max-w-sm"><Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" /><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search by title or excerpt" className="pl-9" /></div></div>
+        {result.isLoading ? <div className="p-12 text-center text-sm text-stone-500">Loading {showTrash ? "trash" : `${type}s`}…</div> : result.data?.entries.length ? <div className="divide-y divide-[#eee7dc]">{result.data.entries.map(entry => <div className="flex items-center gap-4 p-4" key={entry.id}><div className="min-w-0 flex-1"><p className="truncate font-medium text-[#30221a]">{entry.title}</p><p className="mt-1 truncate text-xs text-stone-500">/{entry.slug} · {showTrash ? `Trashed ${entry.trashedAt ? new Date(entry.trashedAt).toLocaleDateString() : "recently"}` : `Updated ${new Date(entry.updatedAt).toLocaleDateString()}`}</p></div>{showTrash ? <><Button variant="outline" size="sm" onClick={() => restore.mutate({ id: entry.id })} disabled={restore.isPending}><RotateCcw className="mr-2 h-3.5 w-3.5" />Restore</Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => window.confirm(`Permanently delete ${entry.title}? This cannot be undone.`) && remove.mutate({ id: entry.id })} aria-label={`Permanently delete ${entry.title}`}><Trash2 className="h-4 w-4" /></Button></> : <><StatusBadge status={entry.status} /><Button variant="ghost" size="icon" onClick={() => setEditing(entry)} aria-label={`Edit ${entry.title}`}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => window.confirm(`Move ${entry.title} to trash?`) && trash.mutate({ id: entry.id })} aria-label={`Move ${entry.title} to trash`}><Trash2 className="h-4 w-4" /></Button></>}</div>)}</div> : <div className="p-14 text-center"><FilePlus2 className="mx-auto h-6 w-6 text-stone-300" /><p className="mt-3 font-medium text-[#453229]">No {showTrash ? "trashed entries" : `${type}s yet`}</p><p className="mt-1 text-sm text-stone-500">{showTrash ? "Deleted content can be restored here before permanent removal." : "Create the first piece from this workspace."}</p></div>}
+      </div>
+    </section>
+  );
 }
 
 function ContentTypesPanel() {
