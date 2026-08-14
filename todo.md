@@ -48,3 +48,6 @@
 - [ ] Add protected content trash/delete actions with ownership enforcement, administration UI controls, and full lifecycle tests for posts, pages, and custom entries.
 - [x] Add router-level lifecycle regression tests for post, page, and custom-entry create, update, ownership, and delete behavior, plus public sitemap noindex and publication-state verification.
 - [ ] Add integration coverage for read/list/update/delete of posts, pages, and custom entries, including scheduled and archived states and custom-entry administration flows.
+- [ ] Add administrator-only database-backed controls to inspect and activate the supported fashion theme and bundled plugins without changing CMS core files.
+- [x] Add administrator-only persisted activation controls for the bundled Reading Time plugin, including public-hook and editor-block gating.
+- [ ] Wire persisted theme selection into the public shell or explicitly constrain the system to a single immutable theme, with runtime integration tests.

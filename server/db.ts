@@ -114,6 +114,7 @@ export async function bootstrapCms(): Promise<void> {
     { key: "siteIndexing", value: true, isPublic: true },
     { key: "homepageCategorySlugs", value: ["fashion", "street-style", "inspiration"], isPublic: true },
     { key: "theme", value: "fashion-editorial", isPublic: true },
+    { key: "enabledPlugins", value: ["reading-time"], isPublic: false },
     { key: "footerTagline", value: "An independent journal of fashion, culture, and considered living.", isPublic: true },
     { key: "footerLocation", value: "London · New York · Everywhere", isPublic: true },
     { key: "footerInstagramUrl", value: "https://www.instagram.com", isPublic: true },

@@ -27,9 +27,12 @@ class CmsHookBus {
     });
   }
 
-  async applyFilters<T extends HookName>(hook: T, value: CmsHookMap[T]): Promise<CmsHookMap[T]> {
+  async applyFilters<T extends HookName>(hook: T, value: CmsHookMap[T], enabledPluginKeys?: readonly string[]): Promise<CmsHookMap[T]> {
     let result = value;
-    for (const item of this.filters.get(hook) ?? []) result = await (item.filter as Filter<CmsHookMap[T]>)(result);
+    for (const item of this.filters.get(hook) ?? []) {
+      if (item.pluginKey && enabledPluginKeys && !enabledPluginKeys.includes(item.pluginKey)) continue;
+      result = await (item.filter as Filter<CmsHookMap[T]>)(result);
+    }
     return result;
   }
 }

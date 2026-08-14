@@ -15,7 +15,9 @@ export const siteRouter = router({
     await bootstrapCms();
     const entry = await getContentEntryBySlug("post", input.slug);
     if (!entry) return null;
-    const extension = await cmsHooks.applyFilters("post.public", { id: entry.id, title: entry.title, bodyMarkdown: entry.bodyMarkdown });
+    const settings = await getSettings();
+    const enabledPlugins = Array.isArray(settings.enabledPlugins) ? settings.enabledPlugins.filter((key): key is string => typeof key === "string") : [];
+    const extension = await cmsHooks.applyFilters("post.public", { id: entry.id, title: entry.title, bodyMarkdown: entry.bodyMarkdown }, enabledPlugins);
     return { ...entry, readingTimeMinutes: extension.readingTimeMinutes };
   }),
   pages: publicProcedure.query(async () => {

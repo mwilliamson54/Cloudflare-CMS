@@ -10,6 +10,13 @@ describe("CMS plugin hooks", () => {
     expect(post.readingTimeMinutes).toBe(2);
   });
 
+  it("gates trusted plugin hooks and blocks when the persisted activation list excludes the plugin", async () => {
+    const post = await cmsHooks.applyFilters("post.public", { id: 11, title: "An essay", bodyMarkdown: "word ".repeat(440) }, []);
+    expect(post.readingTimeMinutes).toBeUndefined();
+    expect(listEditorBlocks([]).some(block => block.type === "reading-time-note")).toBe(false);
+    expect(listEditorBlocks(["reading-time"]).some(block => block.type === "reading-time-note")).toBe(true);
+  });
+
   it("removes plugin-owned hooks when a trusted plugin is unregistered", async () => {
     registerPlugin({ key: "temporary-hook", name: "Temporary", version: "1.0.0", register: hooks => hooks.addFilter("post.public", value => ({ ...value, readingTimeMinutes: 99 })) });
     expect((await cmsHooks.applyFilters("post.public", { id: 2, title: "Test", bodyMarkdown: "text" })).readingTimeMinutes).toBe(99);

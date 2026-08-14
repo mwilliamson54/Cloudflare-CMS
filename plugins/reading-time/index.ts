@@ -6,7 +6,7 @@ export const readingTimePlugin: CmsPlugin = {
   name: "Reading Time",
   version: "1.0.0",
   register(hooks) {
-    registerEditorBlock({ type: "reading-time-note", label: "Reading-time note", markdown: "<aside data-reading-time>Estimated reading time appears here.</aside>\n\n" });
+    registerEditorBlock({ type: "reading-time-note", label: "Reading-time note", markdown: "<aside data-reading-time>Estimated reading time appears here.</aside>\n\n" }, "reading-time");
     hooks.addFilter("post.public", post => ({
       ...post,
       readingTimeMinutes: Math.max(1, Math.ceil((post.bodyMarkdown || "").trim().split(/\s+/).filter(Boolean).length / 220)),

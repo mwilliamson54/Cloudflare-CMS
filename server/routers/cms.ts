@@ -95,7 +95,11 @@ export const cmsRouter = router({
     await bootstrapCms();
     return { success: true };
   }),
-  editorBlocks: procedureWithCapability("content:read").query(() => listEditorBlocks()),
+  editorBlocks: procedureWithCapability("content:read").query(async () => {
+    const settings = await getSettings();
+    const enabledPlugins = Array.isArray(settings.enabledPlugins) ? settings.enabledPlugins.filter((key): key is string => typeof key === "string") : [];
+    return listEditorBlocks(enabledPlugins);
+  }),
   seo: router({
     analyze: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).query(async ({ ctx, input }) => {
       const entry = await getContentEntry(input.id);
@@ -234,6 +238,22 @@ export const cmsRouter = router({
         { key: "footerTagline", value: input.footerTagline, isPublic: true },
         { key: "footerLocation", value: input.footerLocation, isPublic: true },
         { key: "footerInstagramUrl", value: input.footerInstagramUrl, isPublic: true },
+      ], ctx.user.id)),
+  }),
+  appearance: router({
+    get: procedureWithCapability("site:manage").query(async () => {
+      await bootstrapCms();
+      const settings = await getSettings();
+      return {
+        activeTheme: settings.theme === "fashion-editorial" ? "fashion-editorial" : "fashion-editorial",
+        enabledPlugins: Array.isArray(settings.enabledPlugins) ? settings.enabledPlugins.filter((key): key is string => key === "reading-time") : [],
+      };
+    }),
+    update: procedureWithCapability("site:manage")
+      .input(z.object({ activeTheme: z.literal("fashion-editorial"), enabledPlugins: z.array(z.literal("reading-time")).max(1) }))
+      .mutation(({ ctx, input }) => setSettings([
+        { key: "theme", value: input.activeTheme, isPublic: true },
+        { key: "enabledPlugins", value: input.enabledPlugins, isPublic: false },
       ], ctx.user.id)),
   }),
 });

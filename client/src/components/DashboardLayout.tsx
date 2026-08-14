@@ -38,6 +38,7 @@ const menuItems = [
   { icon: KeyRound, label: "API tokens", path: "/admin/tokens" },
   { icon: Users, label: "Users", path: "/admin/users" },
   { icon: Settings2, label: "Settings", path: "/admin/settings" },
+  { icon: Settings2, label: "Appearance", path: "/admin/appearance" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
