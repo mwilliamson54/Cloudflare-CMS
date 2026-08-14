@@ -225,12 +225,15 @@ export const cmsRouter = router({
       return getSettings();
     }),
     update: procedureWithCapability("site:manage")
-      .input(z.object({ siteTitle: z.string().min(1).max(120), siteDescription: z.string().min(1).max(500), siteIndexing: z.boolean(), homepageCategorySlugs: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).max(8) }))
+      .input(z.object({ siteTitle: z.string().min(1).max(120), siteDescription: z.string().min(1).max(500), siteIndexing: z.boolean(), homepageCategorySlugs: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).max(8), footerTagline: z.string().min(1).max(500), footerLocation: z.string().min(1).max(160), footerInstagramUrl: z.string().url().max(2000) }))
       .mutation(async ({ ctx, input }) => setSettings([
         { key: "siteTitle", value: input.siteTitle, isPublic: true },
         { key: "siteDescription", value: input.siteDescription, isPublic: true },
         { key: "siteIndexing", value: input.siteIndexing, isPublic: true },
         { key: "homepageCategorySlugs", value: input.homepageCategorySlugs, isPublic: true },
+        { key: "footerTagline", value: input.footerTagline, isPublic: true },
+        { key: "footerLocation", value: input.footerLocation, isPublic: true },
+        { key: "footerInstagramUrl", value: input.footerInstagramUrl, isPublic: true },
       ], ctx.user.id)),
   }),
 });
