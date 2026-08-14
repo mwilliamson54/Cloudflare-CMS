@@ -18,6 +18,23 @@ import { requireCapability } from "./permissions";
 
 type Resource = "posts" | "pages" | "media" | "categories" | "tags";
 
+const restWindows = new Map<string, { count: number; resetAt: number }>();
+const REST_WINDOW_MS = 60_000;
+const REST_MAX_REQUESTS = 120;
+
+function developmentRestRateLimit(req: Request, res: Response, next: () => void) {
+  const key = req.ip || req.header("x-forwarded-for") || "unknown";
+  const now = Date.now();
+  const existing = restWindows.get(key);
+  const state = !existing || existing.resetAt <= now ? { count: 0, resetAt: now + REST_WINDOW_MS } : existing;
+  state.count += 1;
+  restWindows.set(key, state);
+  res.setHeader("X-RateLimit-Limit", String(REST_MAX_REQUESTS));
+  res.setHeader("X-RateLimit-Remaining", String(Math.max(0, REST_MAX_REQUESTS - state.count)));
+  if (state.count > REST_MAX_REQUESTS) return wpError(res, 429, "rest_rate_limited", "Too many requests. Please retry shortly.");
+  next();
+}
+
 function escapeHtml(value: string) {
   return value.replace(/[&<>"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character] ?? character);
 }
@@ -77,6 +94,7 @@ async function requireWrite(req: Request, capability: "content:write" | "media:w
 }
 
 export function registerWordPressRestRoutes(app: Express) {
+  app.use("/api/wp/v2", developmentRestRateLimit);
   app.get("/api/wp/v2/:resource", async (req, res, next) => {
     try {
       const resource = req.params.resource as Resource;

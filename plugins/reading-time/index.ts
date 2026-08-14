@@ -1,5 +1,5 @@
 import { registerPlugin, type CmsPlugin } from "../../server/cms/extensions";
-import { registerEditorBlock } from "../../server/cms/blocks";
+import { registerEditorBlock, unregisterEditorBlock } from "../../server/cms/blocks";
 
 export const readingTimePlugin: CmsPlugin = {
   key: "reading-time",
@@ -11,6 +11,9 @@ export const readingTimePlugin: CmsPlugin = {
       ...post,
       readingTimeMinutes: Math.max(1, Math.ceil((post.bodyMarkdown || "").trim().split(/\s+/).filter(Boolean).length / 220)),
     }));
+  },
+  unregister() {
+    unregisterEditorBlock("reading-time-note");
   },
 };
 

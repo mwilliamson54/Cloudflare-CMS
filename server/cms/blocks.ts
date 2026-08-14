@@ -17,4 +17,10 @@ export function registerEditorBlock(block: EditorBlock) {
   blocks.set(block.type, block);
 }
 
+export function unregisterEditorBlock(type: string) {
+  // Core blocks are immutable platform features; plugin blocks use distinct keys.
+  if (["heading", "paragraph", "quote", "image", "divider"].includes(type)) return false;
+  return blocks.delete(type);
+}
+
 export function listEditorBlocks() { return Array.from(blocks.values()); }

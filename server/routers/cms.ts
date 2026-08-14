@@ -34,6 +34,7 @@ import { listEditorBlocks } from "../cms/blocks";
 import { persistMediaUpload } from "../cms/media";
 import { requireCapability, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
 import { analyzeSeo } from "../cms/seoAnalysis";
+import { sanitizeRichHtml } from "../cms/sanitize";
 import { protectedProcedure, router } from "../_core/trpc";
 import "../../plugins/registry";
 
@@ -60,6 +61,7 @@ const contentInput = z
     slug: z.string().min(1).max(320).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use a lowercase URL slug."),
     excerpt: z.string().max(5000).nullable().optional(),
     bodyMarkdown: z.string().max(100_000).nullable().optional(),
+    bodyHtml: z.string().max(100_000).nullable().optional(),
     featuredMediaId: z.number().int().positive().nullable().optional(),
     parentId: z.number().int().positive().nullable().optional(),
     templateKey: z.enum(["default", "landing", "narrative", "lookbook", "minimal"]).default("default"),
@@ -120,7 +122,7 @@ export const cmsRouter = router({
     }),
     create: procedureWithCapability("content:write").input(contentInput).mutation(async ({ ctx, input }) => {
       if (input.status === "published" || input.status === "scheduled") requireCapability(ctx.user, "content:publish");
-      return createContentEntry({ ...input, authorId: ctx.user.id, bodyHtml: null });
+      return createContentEntry({ ...input, authorId: ctx.user.id, bodyHtml: sanitizeRichHtml(input.bodyHtml) });
     }),
     update: procedureWithCapability("content:write")
       .input(z.object({ id: z.number().int().positive(), values: contentInput.partial() }))
@@ -129,7 +131,7 @@ export const cmsRouter = router({
         if (!entry) throw new Error("Content entry not found.");
         requireEntryOwnership(ctx.user, entry);
         if (input.values.status === "published" || input.values.status === "scheduled") requireCapability(ctx.user, "content:publish");
-        return updateContentEntry(input.id, { ...input.values, bodyHtml: undefined });
+        return updateContentEntry(input.id, { ...input.values, bodyHtml: input.values.bodyHtml === undefined ? undefined : sanitizeRichHtml(input.values.bodyHtml) });
       }),
   }),
   users: router({

@@ -38,8 +38,9 @@
 - [ ] Add individual and aggregate SEO analysis with actionable checks, scalable cached/aggregated reporting, structured data, and crawler-visible metadata delivery.
 - [ ] Review schema indexes, query patterns, N+1 risks, media pagination, sitemap chunking, and cache strategy for 50,000 posts and 500,000 media objects.
 - [ ] Complete security audit and harden authorization, media uploads, sanitization, token scopes, CSRF exposure, rate limiting, custom code, and plugin trust boundaries.
-- [ ] Audit plugin lifecycle and security using the reading-time plugin as a removable integration test.
-- [ ] Centralize core/admin/theme design tokens and document the stylesheet separation.
-- [ ] Complete Cloudflare free-plan compatibility review and document unsupported, paid, or operationally constrained features.
+- [x] Audit plugin lifecycle and security using the reading-time plugin as a removable integration test.
+- [x] Centralize core/admin/theme design tokens and document the stylesheet separation.
+- [x] Complete Cloudflare free-plan compatibility review and document unsupported, paid, or operationally constrained features.
+- [x] Verify that the actual reading-time plugin can be registered and removed cleanly, and document plugin trust boundaries and lifecycle safeguards.
 - [ ] Write API documentation, WordPress compatibility documentation, a final audit report, and end-to-end tests for critical CMS paths.
 - [x] Document the intentional `admin`-as-Administrator compatibility mapping and add procedure tests for non-admin user-list/role-update denial and self-lockout protection.
