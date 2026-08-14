@@ -2,7 +2,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const repository = vi.hoisted(() => ({ listContentEntries: vi.fn(), getContentEntry: vi.fn(), getContentEntryBySlug: vi.fn(), createContentEntry: vi.fn() }));
+const repository = vi.hoisted(() => ({ listContentEntries: vi.fn(), getContentEntry: vi.fn(), getContentEntryBySlug: vi.fn(), createContentEntry: vi.fn(), updateContentEntry: vi.fn(), deleteContentEntry: vi.fn() }));
 const auth = vi.hoisted(() => ({ authenticateRestRequest: vi.fn() }));
 
 vi.mock("../db", async () => ({ ...(await vi.importActual<typeof import("../db")>("../db")), ...repository }));
@@ -26,6 +26,7 @@ describe("WordPress REST adapter", () => {
     repository.listContentEntries.mockResolvedValue({ entries: [published], total: 23 });
     repository.getContentEntry.mockResolvedValue(published); repository.getContentEntryBySlug.mockResolvedValue(published);
     repository.createContentEntry.mockImplementation(async (input: unknown) => ({ ...published, ...(input as object) }));
+    repository.updateContentEntry.mockResolvedValue(published); repository.deleteContentEntry.mockResolvedValue(true);
     auth.authenticateRestRequest.mockResolvedValue({ user: { id: 9, role: "author" }, scopes: ["content:write"] });
   });
   afterEach(async () => { await new Promise<void>(resolve => server?.close(() => resolve())); server = undefined; });
@@ -47,5 +48,20 @@ describe("WordPress REST adapter", () => {
     const response = await request("/api/wp/v2/posts", { method: "POST", headers: { authorization: "Bearer test", "content-type": "application/json" }, body: JSON.stringify({ title: { raw: "A new story" }, slug: "a-new-story", content: { raw: "Body" }, status: "published" }) });
     expect(response.status).toBe(201); expect(auth.authenticateRestRequest).toHaveBeenCalledWith("Bearer test", "content:write");
     expect(repository.createContentEntry).toHaveBeenCalledWith(expect.objectContaining({ contentTypeKey: "post", authorId: 9, title: "A new story", status: "published" }));
+  });
+
+  it("rejects an author attempting to update another author’s post", async () => {
+    repository.getContentEntry.mockResolvedValue({ ...published, authorId: 44 });
+    const response = await request("/api/wp/v2/posts/5", { method: "PATCH", headers: { authorization: "Bearer test", "content-type": "application/json" }, body: JSON.stringify({ title: { raw: "Unauthorized" } }) });
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ code: "cms_forbidden", data: { status: 403 } });
+    expect(repository.updateContentEntry).not.toHaveBeenCalled();
+  });
+
+  it("permanently deletes an owned entry and returns the WordPress deletion envelope", async () => {
+    const response = await request("/api/wp/v2/posts/5", { method: "DELETE", headers: { authorization: "Bearer test" } });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ deleted: true, previous: { id: 5, status: "published" } });
+    expect(repository.deleteContentEntry).toHaveBeenCalledWith(5);
   });
 });

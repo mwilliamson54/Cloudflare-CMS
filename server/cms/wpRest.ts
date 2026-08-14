@@ -4,6 +4,7 @@ import {
   createCategory,
   createContentEntry,
   createTag,
+  deleteContentEntry,
   getContentEntry,
   getContentEntryBySlug,
   listCategories,
@@ -14,7 +15,7 @@ import {
 } from "../db";
 import { persistMediaReplacement, persistMediaUpload } from "./media";
 import { authenticateRestRequest } from "./restAuth";
-import { requireCapability } from "./permissions";
+import { requireCapability, requireEntryOwnership } from "./permissions";
 
 type Resource = "posts" | "pages" | "media" | "categories" | "tags";
 
@@ -180,6 +181,9 @@ export function registerWordPressRestRoutes(app: Express) {
       }
       if (resource !== "posts" && resource !== "pages") return wpError(res, 404, "rest_no_route", "No route was found matching the URL and request method.");
       const auth = await requireWrite(req, "content:write");
+      const existing = await getContentEntry(Number(req.params.id));
+      if (!existing) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
+      requireEntryOwnership(auth.user, existing);
       const status = req.body.status;
       if (status === "published" || status === "scheduled") requireCapability(auth.user, "content:publish");
       const entry = await updateContentEntry(Number(req.params.id), {
@@ -192,6 +196,20 @@ export function registerWordPressRestRoutes(app: Express) {
       });
       if (!entry) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
       return res.json(contentResponse(entry));
+    } catch (error) { next(error); }
+  });
+
+  app.delete("/api/wp/v2/:resource/:id", async (req, res, next) => {
+    try {
+      const resource = req.params.resource as Resource;
+      if (resource !== "posts" && resource !== "pages") return wpError(res, 404, "rest_no_route", "No route was found matching the URL and request method.");
+      const auth = await requireWrite(req, "content:write");
+      const existing = await getContentEntry(Number(req.params.id));
+      if (!existing) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
+      requireEntryOwnership(auth.user, existing);
+      const deleted = await deleteContentEntry(existing.id);
+      if (!deleted) return wpError(res, 404, "rest_post_invalid_id", "Invalid post ID.");
+      return res.json({ deleted: true, previous: contentResponse(existing) });
     } catch (error) { next(error); }
   });
 
