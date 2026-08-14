@@ -43,6 +43,13 @@
       "when": 1786717420314,
       "tag": "0005_gorgeous_the_fallen",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1786720055091,
+      "tag": "0006_rich_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }

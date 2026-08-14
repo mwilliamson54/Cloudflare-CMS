@@ -72,6 +72,7 @@ export const media = mysqlTable(
     index("media_uploaded_by_index").on(table.uploadedById),
     index("media_mime_type_index").on(table.mimeType),
     index("media_created_at_index").on(table.createdAt),
+    index("media_uploader_created_index").on(table.uploadedById, table.createdAt),
   ],
 );
 
@@ -111,6 +112,9 @@ export const contentEntries = mysqlTable(
   table => [
     uniqueIndex("content_entries_type_slug_unique").on(table.contentTypeId, table.slug),
     index("content_entries_status_published_index").on(table.status, table.publishedAt),
+    index("content_entries_public_listing_index").on(table.contentTypeId, table.status, table.trashedAt, table.publishedAt, table.updatedAt),
+    index("content_entries_schedule_guard_index").on(table.status, table.trashedAt, table.scheduledAt),
+    index("content_entries_sitemap_index").on(table.status, table.trashedAt, table.robotsIndex, table.updatedAt),
     index("content_entries_trashed_at_index").on(table.trashedAt),
     index("content_entries_author_index").on(table.authorId),
     index("content_entries_featured_media_index").on(table.featuredMediaId),
@@ -161,7 +165,7 @@ export const contentCategories = mysqlTable(
     contentEntryId: int("contentEntryId").notNull(),
     categoryId: int("categoryId").notNull(),
   },
-  table => [primaryKey({ columns: [table.contentEntryId, table.categoryId] })],
+  table => [primaryKey({ columns: [table.contentEntryId, table.categoryId] }), index("content_categories_category_entry_index").on(table.categoryId, table.contentEntryId)],
 );
 
 export const contentTags = mysqlTable(
@@ -170,7 +174,7 @@ export const contentTags = mysqlTable(
     contentEntryId: int("contentEntryId").notNull(),
     tagId: int("tagId").notNull(),
   },
-  table => [primaryKey({ columns: [table.contentEntryId, table.tagId] })],
+  table => [primaryKey({ columns: [table.contentEntryId, table.tagId] }), index("content_tags_tag_entry_index").on(table.tagId, table.contentEntryId)],
 );
 
 export const apiTokens = mysqlTable(
