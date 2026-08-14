@@ -12,7 +12,7 @@ import {
   listTags,
   updateContentEntry,
 } from "../db";
-import { persistMediaUpload } from "./media";
+import { persistMediaReplacement, persistMediaUpload } from "./media";
 import { authenticateRestRequest } from "./restAuth";
 import { requireCapability } from "./permissions";
 
@@ -173,6 +173,11 @@ export function registerWordPressRestRoutes(app: Express) {
   app.patch("/api/wp/v2/:resource/:id", async (req, res, next) => {
     try {
       const resource = req.params.resource as Resource;
+      if (resource === "media") {
+        const auth = await requireWrite(req, "media:write");
+        if (!req.body.fileName || !req.body.mimeType || !req.body.dataBase64) return wpError(res, 400, "rest_upload_invalid", "fileName, mimeType, and dataBase64 are required.");
+        return res.json(await persistMediaReplacement({ mediaId: Number(req.params.id), fileName: req.body.fileName, mimeType: req.body.mimeType, dataBase64: req.body.dataBase64, uploadedById: auth.user.id }));
+      }
       if (resource !== "posts" && resource !== "pages") return wpError(res, 404, "rest_no_route", "No route was found matching the URL and request method.");
       const auth = await requireWrite(req, "content:write");
       const status = req.body.status;
