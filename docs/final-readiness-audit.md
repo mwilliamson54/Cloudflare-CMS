@@ -79,7 +79,7 @@ The following ledger accounts for every numbered requirement in `todo.md` as of 
 | 11 | Premium administration dashboard | Partial | Major panels exist; remaining configuration and completion coverage are open. |
 | 12 | Fashion public frontend | Implemented | Homepage, archives, search, taxonomy, detail, and page routes exist. |
 | 13 | SEO metadata and crawl controls | Partial | Local SSR and SEO controls exist; Cloudflare edge delivery remains open. |
-| 14 | CMS configuration | Partial | Menus, footer, plugins, theme metadata, and indexing exist; trusted custom code does not. |
+| 14 | CMS configuration | Partial | Menus, footer, plugins, theme metadata, indexing, and constrained administrator CSS exist; trusted script/markup injection does not. |
 | 15 | Extension model | Implemented | Registered blocks, hooks, plugin registry, and trust documentation exist. |
 | 16 | Cloudflare deployment config | Implemented | Bindings, migration, Functions, and Worker config are documented. |
 | 17 | Broad automated coverage | Partial | 73 tests exist; production-binding and browser integration gaps remain. |

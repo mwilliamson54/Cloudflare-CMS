@@ -40,6 +40,7 @@ import { requireCapability, requireEntryOwnership, requireMediaOwnership, requir
 import { analyzeSeo } from "../cms/seoAnalysis";
 import { summarizeSeo } from "../cms/seoSummary";
 import { sanitizeRichHtml } from "../cms/sanitize";
+import { CUSTOM_CSS_MAX_LENGTH, getCustomCssValidationError } from "../cms/customCss";
 import { protectedProcedure, router } from "../_core/trpc";
 import "../../plugins/registry";
 
@@ -237,7 +238,12 @@ export const cmsRouter = router({
   settings: router({
     get: procedureWithCapability("site:manage").query(() => getSettings()),
     update: procedureWithCapability("site:manage")
-      .input(z.object({ siteTitle: z.string().min(1).max(120), siteDescription: z.string().min(1).max(500), siteIndexing: z.boolean(), homepageCategorySlugs: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).max(8), footerTagline: z.string().min(1).max(500), footerLocation: z.string().min(1).max(160), footerInstagramUrl: z.string().url().max(2000) }))
+      .input(z.object({ siteTitle: z.string().min(1).max(120), siteDescription: z.string().min(1).max(500), siteIndexing: z.boolean(), homepageCategorySlugs: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).max(8), footerTagline: z.string().min(1).max(500), footerLocation: z.string().min(1).max(160), footerInstagramUrl: z.string().url().max(2000), customCss: z.string().max(CUSTOM_CSS_MAX_LENGTH).optional() }).superRefine((input, ctx) => {
+        if (input.customCss !== undefined) {
+          const error = getCustomCssValidationError(input.customCss);
+          if (error) ctx.addIssue({ code: "custom", path: ["customCss"], message: error });
+        }
+      }))
       .mutation(async ({ ctx, input }) => setSettings([
         { key: "siteTitle", value: input.siteTitle, isPublic: true },
         { key: "siteDescription", value: input.siteDescription, isPublic: true },
@@ -246,6 +252,7 @@ export const cmsRouter = router({
         { key: "footerTagline", value: input.footerTagline, isPublic: true },
         { key: "footerLocation", value: input.footerLocation, isPublic: true },
         { key: "footerInstagramUrl", value: input.footerInstagramUrl, isPublic: true },
+        ...(input.customCss === undefined ? [] : [{ key: "customCss", value: input.customCss.trim(), isPublic: true }]),
       ], ctx.user.id)),
   }),
   appearance: router({

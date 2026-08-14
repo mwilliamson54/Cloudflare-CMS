@@ -42,4 +42,11 @@ describe("Fashion public shell bundled-theme contract", () => {
     expect(html).toContain(fashionTheme.newsletterTitle);
     expect(html).toContain(fashionTheme.navigation[0].label);
   });
+
+  it("applies a persisted controlled custom CSS setting once through the public header", () => {
+    const html = renderPublicShell({ customCss: ".site-accent { color: #a77150; }" });
+
+    expect(html).toContain("data-cms-custom-css");
+    expect(html).toContain(".site-accent { color: #a77150; }");
+  });
 });

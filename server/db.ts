@@ -118,6 +118,7 @@ export async function bootstrapCms(): Promise<void> {
     { key: "footerTagline", value: "An independent journal of fashion, culture, and considered living.", isPublic: true },
     { key: "footerLocation", value: "London · New York · Everywhere", isPublic: true },
     { key: "footerInstagramUrl", value: "https://www.instagram.com", isPublic: true },
+    { key: "customCss", value: "", isPublic: true },
   ];
   for (const setting of defaults) {
     await db.insert(siteSettings).values({ namespace: "site", ...setting }).onDuplicateKeyUpdate({ set: { key: setting.key } });

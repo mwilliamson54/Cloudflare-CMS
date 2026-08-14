@@ -112,4 +112,5 @@ INSERT OR IGNORE INTO site_settings(namespace,key,value,is_public) VALUES
   ('site','siteDescription','"An independent journal of fashion, culture, and considered living."',1),
   ('site','siteIndexing','true',1),
   ('site','theme','"fashion-editorial"',1),
+  ('site','customCss','""',1),
   ('site','enabledPlugins','["reading-time"]',0);
