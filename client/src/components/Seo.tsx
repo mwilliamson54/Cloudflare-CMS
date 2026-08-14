@@ -6,7 +6,7 @@ function setMeta(selector: string, attribute: "name" | "property", key: string, 
   element.content = content;
 }
 
-export function Seo({ title, description, canonicalPath, noindex = false, nofollow = false, image }: { title: string; description: string; canonicalPath: string; noindex?: boolean; nofollow?: boolean; image?: string }) {
+export function Seo({ title, description, canonicalPath, noindex = false, nofollow = false, image, jsonLd }: { title: string; description: string; canonicalPath: string; noindex?: boolean; nofollow?: boolean; image?: string; jsonLd?: Record<string, unknown> }) {
   useEffect(() => {
     document.title = title;
     const canonical = new URL(canonicalPath, window.location.origin).toString();
@@ -19,6 +19,8 @@ export function Seo({ title, description, canonicalPath, noindex = false, nofoll
     setMeta('meta[property="og:description"]', "property", "og:description", description);
     setMeta('meta[property="og:url"]', "property", "og:url", canonical);
     if (image) setMeta('meta[property="og:image"]', "property", "og:image", new URL(image, window.location.origin).toString());
-  }, [title, description, canonicalPath, noindex, nofollow, image]);
+    let structuredData = document.head.querySelector<HTMLScriptElement>('script[data-atelier-jsonld="article"]');
+    if (jsonLd) { if (!structuredData) { structuredData = document.createElement("script"); structuredData.type = "application/ld+json"; structuredData.dataset.atelierJsonld = "article"; document.head.appendChild(structuredData); } structuredData.text = JSON.stringify(jsonLd); } else structuredData?.remove();
+  }, [title, description, canonicalPath, noindex, nofollow, image, jsonLd]);
   return null;
 }
