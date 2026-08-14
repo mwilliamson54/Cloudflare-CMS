@@ -5,25 +5,25 @@
 - [x] Implement role-based access control with the exact roles: admin, editor, and viewer.
 - [x] Implement secure JWT-backed REST API token issuance, revocation, validation, hashing, and audit metadata.
 - [x] Create WordPress-compatible REST endpoints at `/api/wp/v2/posts`, `/api/wp/v2/pages`, `/api/wp/v2/media`, `/api/wp/v2/categories`, and `/api/wp/v2/tags`.
-- [ ] Implement post, page, and custom-content CRUD with flexible field definitions and lifecycle statuses: draft, scheduled, published, and archived.
+- [x] Implement post, page, and custom-content CRUD with flexible field definitions and lifecycle statuses: draft, scheduled, published, and archived.
 - [x] Implement scheduled publishing with Cloudflare-compatible, idempotent processing.
 - [x] Build category and tag management, including hierarchical category support.
-- [ ] Build a rich Markdown editor with a secure live preview and extensible block model.
+- [x] Build a rich Markdown editor with a secure live preview and extensible block model.
 - [x] Build an S3-compatible media-library workflow with upload, browse, metadata, replace, search, and delete-reference actions.
 - [ ] Build a premium admin dashboard using the provided dashboard layout, with complete content, taxonomies, media, tokens, SEO, menus, settings, themes, plugins, and system areas.
 - [x] Build a polished, responsive fashion-magazine frontend with hero, configurable category sections, article cards, article detail views, and search.
-- [ ] Implement SEO metadata, canonical URLs, Open Graph cards, robots controls, dynamic sitemap.xml, and robots.txt.
+- [x] Implement SEO metadata, canonical URLs, Open Graph cards, robots controls, dynamic sitemap.xml, and robots.txt.
 - [ ] Implement CMS configuration for header, footer, menus, theme settings, plugins, custom code, and site-wide index controls.
 - [x] Add a documented extension model for themes, content blocks, and plugins.
 - [x] Add Cloudflare Pages Functions, D1, R2, and KV deployment configuration and environment-variable documentation.
-- [ ] Write and run automated tests for authorization, JWT tokens, workflow rules, REST endpoints, content visibility, sitemap, and SEO behavior.
+- [x] Write and run automated tests for authorization, JWT tokens, workflow rules, REST endpoints, content visibility, sitemap, and SEO behavior.
 - [x] Verify public and administrative views across desktop and mobile layouts, resolve visual or runtime issues, and document deployment steps.
 - [ ] Enforce role capability checks across all CMS mutation procedures and verify each role boundary with automated tests.
 - [x] Complete the end-to-end REST token lifecycle: issuance, hashed persistence, database-backed revocation validation, usage metadata, and management UI.
 - [ ] Complete custom-content editing, media replacement/search metadata, SEO controls, menus, header/footer, theme/plugin controls, and controlled custom-code settings in the administration UI.
 - [ ] Add end-to-end integration tests for REST publication, content visibility, sitemap inclusion, and noindex behavior.
-- [ ] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.
-- [ ] Upgrade the textarea authoring surface to structured block insertion, editing, reordering, deletion, and explicitly sanitized preview coverage.
+- [x] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.
+- [x] Upgrade the textarea authoring surface to structured block insertion, editing, reordering, deletion, and explicitly sanitized preview coverage.
 - [x] Audit the existing CMS end to end and record whether every hardening requirement is already implemented, partial, or absent.
 - [x] Expand user levels to WordPress-style roles: administrator, editor, author, contributor, subscriber, and an optional viewer compatibility role, with explicit least-privilege capabilities.
 - [x] Add administrator-only user management for listing users and changing roles, with safeguards against privilege escalation and self-lockout.
