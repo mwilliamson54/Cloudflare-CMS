@@ -35,5 +35,6 @@ describe("CMS procedure authorization", () => {
     await expect(
       caller.apiTokens.create({ name: "Restricted", scopes: ["content:read"], expiresInDays: 30 }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.content.delete({ id: 1 })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
