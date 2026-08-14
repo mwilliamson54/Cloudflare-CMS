@@ -45,6 +45,12 @@ describe("CMS appearance configuration", () => {
     ], 8);
   });
 
+  it("retains the reviewed Fashion Editorial theme as the only administrator-visible theme mode", async () => {
+    const caller = cmsRouter.createCaller(context("admin"));
+
+    await expect(caller.appearance.get()).resolves.toMatchObject({ activeTheme: "fashion-editorial", themeMode: "bundled-single-theme" });
+  });
+
   it("rejects activation of unreviewed plugin keys", async () => {
     const caller = cmsRouter.createCaller(context("admin"));
     await expect(caller.appearance.update({ enabledPlugins: ["third-party-plugin"] as never[] })).rejects.toMatchObject({ code: "BAD_REQUEST" });
