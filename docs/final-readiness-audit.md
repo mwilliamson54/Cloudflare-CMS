@@ -96,7 +96,7 @@ The following ledger accounts for every numbered requirement in `todo.md` as of 
 | 28 | R2-first storage hardening | Partial | Provider, keying, validation, and metadata exist; derivatives are deferred. |
 | 29 | Drag-and-drop multi-file uploads | Partial | UI exists; retry and complete interaction evidence remain. |
 | 30 | Protected real-theme previews | Partial | Preview routes and templates exist; full scheduled/page coverage remains. |
-| 31 | Visual/source authoring safety | Partial | Modes and sanitization exist; end-to-end mode coverage remains. |
+| 31 | Visual/source authoring safety | Implemented | Visual and source modes, sandboxed preview, sanitization, and safety guidance exist; browser interaction coverage is tracked separately. |
 | 32 | Page hierarchy/template separation | Partial | Parent references and public page templates exist; hierarchy delivery remains incomplete. |
 | 33 | Theme-level template selection | Implemented | Five template branches are shared and tested. |
 | 34 | Public flow/cache audit | Partial | Major routes were reviewed; invalidation and cache evidence remain. |
