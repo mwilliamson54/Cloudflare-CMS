@@ -39,4 +39,9 @@ export const siteRouter = router({
     const result = await listContentEntries({ contentTypeKey: "post", publishedOnly: true, perPage: 100 });
     return result.entries.filter(entry => entry.categories.some(category => category.slug === input.slug));
   }),
+  tagPosts: publicProcedure.input(z.object({ slug: z.string().min(1).max(180) })).query(async ({ input }) => {
+    await bootstrapCms();
+    const result = await listContentEntries({ contentTypeKey: "post", publishedOnly: true, perPage: 100 });
+    return result.entries.filter(entry => entry.tags.some(tag => tag.slug === input.slug));
+  }),
 });

@@ -61,6 +61,7 @@
 - [x] Implement session-bound or double-submit CSRF tokens for cookie-authenticated CMS writes and add request-level allow/deny regression coverage.
 - [x] Add request-level tRPC middleware tests for valid same-origin CSRF writes and rejected missing, invalid, or hostile-origin write requests.
 - [ ] Enforce author ownership for REST post/page updates and add authenticated REST DELETE behavior with clear permanent-deletion semantics.
+- [x] Add a published-only public tag archive query and route to complete taxonomy archive parity.
 - [x] Enforce author ownership for REST post/page updates and add authenticated REST DELETE behavior with clear permanent-deletion semantics.
 - [x] Document the R2 original-only thumbnail strategy, per-file retry behavior, immutable delivery caching, and future derivative-pipeline boundary.
 - [ ] Convert public metadata delivery to SSR or an edge HTML-rewrite path before relying on per-entry SEO and social metadata in initial crawler responses.

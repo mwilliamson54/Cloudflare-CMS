@@ -56,6 +56,8 @@ The public site router now has complementary visibility coverage: public post li
 
 Category archives now have the same explicit regression evidence: the route requests a published-only post set before applying the category relationship filter. Scheduled and archived entries therefore cannot enter the category view through a different public query path. Full database-backed lifecycle fixtures and custom-entry administration flows remain tracked separately.
 
+Public tag archives now use the equivalent `site.tagPosts` contract, request published posts before filtering tag relationships, and render at `/tag/:slug` through the fashion archive shell. The new route has regression coverage for the published-only query input and visual verification for its empty and populated-layout boundary.
+
 The Cloudflare scheduled worker now has direct regression coverage for its promotion statement. Each run issues one guarded D1 update that transitions only rows with `status = 'scheduled'`, a non-null due timestamp, and `scheduled_at <= now`; it sets the publication timestamp from the scheduled value. The public query contracts therefore keep scheduled records private until the idempotent promotion succeeds, after which homepage, archive, category, search, REST, and sitemap readers use their existing published-only filters.
 
 ## Query-Shape Scalability Increment

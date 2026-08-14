@@ -27,4 +27,11 @@ describe("public content lifecycle visibility", () => {
     await expect(siteRouter.createCaller({} as any).categoryPosts({ slug: "fashion" })).resolves.toEqual([{ id: 11, categories: [{ slug: "fashion" }] }]);
     expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "post", publishedOnly: true, perPage: 100 });
   });
+
+  it("uses the same published-only contract for tag archives", async () => {
+    repository.listContentEntries.mockResolvedValue({ entries: [{ id: 12, categories: [], tags: [{ slug: "tailoring" }] }], total: 1 });
+
+    await expect(siteRouter.createCaller({} as any).tagPosts({ slug: "tailoring" })).resolves.toEqual([{ id: 12, categories: [], tags: [{ slug: "tailoring" }] }]);
+    expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "post", publishedOnly: true, perPage: 100 });
+  });
 });
