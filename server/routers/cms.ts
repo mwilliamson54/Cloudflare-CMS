@@ -101,6 +101,12 @@ export const cmsRouter = router({
       .input(z.object({ contentTypeKey: z.string(), status: statusSchema.optional(), query: z.string().max(120).optional(), page: z.number().int().positive().optional(), perPage: z.number().int().positive().max(100).optional() }))
       .query(async ({ input }) => listContentEntries(input)),
     get: procedureWithCapability("content:read").input(z.object({ id: z.number().int().positive() })).query(({ input }) => getContentEntry(input.id)),
+    preview: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const entry = await getContentEntry(input.id);
+      if (!entry) return null;
+      requireEntryOwnership(ctx.user, entry);
+      return entry;
+    }),
     create: procedureWithCapability("content:write").input(contentInput).mutation(async ({ ctx, input }) => {
       if (input.status === "published" || input.status === "scheduled") requireCapability(ctx.user, "content:publish");
       return createContentEntry({ ...input, authorId: ctx.user.id, bodyHtml: null });

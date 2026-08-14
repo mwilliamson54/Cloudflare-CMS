@@ -26,6 +26,8 @@ The current development storage helper requests a server-side S3-compatible pres
 
 The first priority is authorization: extend the role enum and capability matrix, enforce ownership for author/contributor content, and add administrator-only role management. The next priority is media and R2 write support, followed by protected previews, template selection, REST compatibility, SEO analysis, scalability, and security testing.
 
+The scheduled Worker configuration was compiled in a no-deploy Cloudflare dry run after this audit was started. It resolved the `CMS_DB` binding and produced a deployable worker bundle without publishing anything.
+
 ## Role Compatibility Mapping
 
 The persisted role key **`admin`** is intentionally retained as the WordPress **Administrator** equivalent to avoid breaking existing users, the original CMS contract, and existing API tokens. The administration UI presents this as **Administrator**. The full role set is therefore `admin` (Administrator), `editor`, `author`, `contributor`, `subscriber`, and `viewer` (a legacy read-only compatibility level). Only `admin` can list users or change roles; an administrator cannot demote their own account.

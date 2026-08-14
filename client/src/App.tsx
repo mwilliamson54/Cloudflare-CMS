@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import { Article, BlogArchive, CategoryArchive, SearchResults } from "./pages/Blog";
+import { PreviewArticle } from "./pages/Preview";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -14,6 +15,7 @@ function Router() {
     <Switch>
       <Route path={"/admin/:rest*"} component={Admin} />
       <Route path={"/admin"} component={Admin} />
+      <Route path={"/preview/:id"} component={PreviewArticle} />
       <Route path={"/blog/:slug"} component={Article} />
       <Route path={"/blog"} component={BlogArchive} />
       <Route path={"/category/:slug"} component={CategoryArchive} />

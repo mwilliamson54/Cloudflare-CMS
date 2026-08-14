@@ -37,11 +37,12 @@ async function resourceList(context: Context, resource: string) {
   }
   if (resource === "categories" || resource === "tags") return json((await context.env.CMS_DB.prepare(`SELECT * FROM ${resource} ORDER BY name`).all()).results);
   if (resource === "media") return json((await context.env.CMS_DB.prepare("SELECT * FROM media ORDER BY created_at DESC LIMIT ? OFFSET ?").bind(perPage, (page - 1) * perPage).all()).results);
+  if (resource === "users") { const rows = await context.env.CMS_DB.prepare("SELECT id,name,created_at FROM users ORDER BY id LIMIT ? OFFSET ?").bind(perPage, (page - 1) * perPage).all(); return json(rows.results.map((user: any) => ({ id: user.id, name: user.name || "CMS author", slug: `author-${user.id}`, link: `/author/${user.id}`, description: "", avatar_urls: {}, registered_date: user.created_at }))); }
   return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
 }
 export const onRequestGet = async (context: Context) => {
   const [resource, id] = segments(context); if (!resource) return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
-  if (!id) return resourceList(context, resource); if (resource !== "posts" && resource !== "pages") return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
+  if (!id) return resourceList(context, resource); if (resource === "users") { const user = await context.env.CMS_DB.prepare("SELECT id,name,created_at FROM users WHERE id=? LIMIT 1").bind(id).first(); return user ? json({ id: user.id, name: user.name || "CMS author", slug: `author-${user.id}`, link: `/author/${user.id}`, description: "", avatar_urls: {}, registered_date: user.created_at }) : wpError(404, "rest_user_invalid_id", "Invalid user ID."); } if (resource !== "posts" && resource !== "pages") return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
   const key = resource === "posts" ? "post" : "page"; const entry = await context.env.CMS_DB.prepare("SELECT e.* FROM content_entries e JOIN content_types t ON t.id=e.content_type_id WHERE t.key=? AND (e.id=? OR e.slug=?) AND e.status='published' LIMIT 1").bind(key, id, id).first();
   return entry ? json({ id: entry.id, date: entry.published_at || entry.created_at, modified: entry.updated_at, slug: entry.slug, status: entry.status, type: key, link: `/blog/${entry.slug}`, title: { rendered: entry.title }, content: { rendered: html(entry.body_markdown), raw: entry.body_markdown || "" }, excerpt: { rendered: html(entry.excerpt), raw: entry.excerpt || "" }, author: entry.author_id, featured_media: entry.featured_media_id || 0 }) : wpError(404, "rest_post_invalid_id", "Invalid post ID.");
 };
