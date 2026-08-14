@@ -56,8 +56,9 @@
 - [x] Add local WordPress REST contract tests for published visibility, search and pagination headers, unpublished single-resource denial, authenticated publication, and error shape.
 - [x] Add structured Markdown block controls for insertion, ordering, and removal while keeping the existing multi-mode source and preview workflow.
 - [x] Eliminate per-entry taxonomy hydration queries from paginated content lists while preserving entry category and tag contracts.
-- [ ] Add explicit origin/CSRF enforcement before allowing any cross-origin cookie-authenticated CMS mutation flow.
+- [x] Add explicit origin/CSRF enforcement before allowing any cross-origin cookie-authenticated CMS mutation flow.
 - [x] Enforce same-origin requests for the tRPC administration API while retaining the bearer-token REST API contract.
-- [ ] Implement session-bound or double-submit CSRF tokens for cookie-authenticated CMS writes and add request-level allow/deny regression coverage.
+- [x] Implement session-bound or double-submit CSRF tokens for cookie-authenticated CMS writes and add request-level allow/deny regression coverage.
+- [x] Add request-level tRPC middleware tests for valid same-origin CSRF writes and rejected missing, invalid, or hostile-origin write requests.
 - [x] Document the R2 original-only thumbnail strategy, per-file retry behavior, immutable delivery caching, and future derivative-pipeline boundary.
 - [ ] Convert public metadata delivery to SSR or an edge HTML-rewrite path before relying on per-entry SEO and social metadata in initial crawler responses.

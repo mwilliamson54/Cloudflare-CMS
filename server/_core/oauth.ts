@@ -1,4 +1,4 @@
-import { COOKIE_NAME, ONE_YEAR_MS, OAUTH_STATE_COOKIE, decodeOAuthState } from "@shared/const";
+import { COOKIE_NAME, CSRF_COOKIE_NAME, ONE_YEAR_MS, OAUTH_STATE_COOKIE, decodeOAuthState } from "@shared/const";
 import { parse as parseCookieHeader } from "cookie";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
@@ -55,6 +55,7 @@ export function registerOAuthRoutes(app: Express) {
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(CSRF_COOKIE_NAME, crypto.randomUUID(), { ...cookieOptions, httpOnly: false, sameSite: "lax", maxAge: ONE_YEAR_MS });
 
       res.redirect(302, "/");
     } catch (error) {

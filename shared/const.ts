@@ -1,4 +1,6 @@
 export const COOKIE_NAME = "app_session_id";
+export const CSRF_COOKIE_NAME = "cms_csrf_token";
+export const CSRF_HEADER_NAME = "x-csrf-token";
 export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 export const AXIOS_TIMEOUT_MS = 30_000;
 export const UNAUTHED_ERR_MSG = 'Please login (10001)';

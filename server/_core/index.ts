@@ -10,7 +10,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { registerWordPressRestRoutes } from "../cms/wpRest";
 import { registerSeoRoutes } from "../cms/seo";
-import { isSameOriginRequest } from "./origin";
+import { trpcRequestGuard } from "./trpcGuard";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -42,13 +42,7 @@ async function startServer() {
   registerWordPressRestRoutes(app);
   registerSeoRoutes(app);
   // tRPC API
-  app.use("/api/trpc", (req, res, next) => {
-    if (!isSameOriginRequest(req.get("origin"), req.get("host"))) {
-      res.status(403).json({ error: "Cross-origin CMS requests are not allowed." });
-      return;
-    }
-    next();
-  });
+  app.use("/api/trpc", trpcRequestGuard);
   app.use(
     "/api/trpc",
     createExpressMiddleware({

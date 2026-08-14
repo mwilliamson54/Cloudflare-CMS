@@ -7,3 +7,8 @@ export function isSameOriginRequest(origin: string | undefined, host: string | u
     return false;
   }
 }
+
+/** Double-submit token check for cookie-authenticated requests. */
+export function hasValidCsrfToken(cookieToken: string | undefined, headerToken: string | undefined) {
+  return Boolean(cookieToken && headerToken && cookieToken === headerToken);
+}

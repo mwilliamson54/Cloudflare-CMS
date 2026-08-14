@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { COOKIE_NAME, UNAUTHED_ERR_MSG } from '@shared/const';
+import { COOKIE_NAME, CSRF_COOKIE_NAME, CSRF_HEADER_NAME, UNAUTHED_ERR_MSG } from '@shared/const';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -43,6 +43,8 @@ const trpcClient = trpc.createClient({
       url: "/api/trpc",
       transformer: superjson,
       headers() {
+        const csrfToken = document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(`${CSRF_COOKIE_NAME}=`))?.slice(`${CSRF_COOKIE_NAME}=`.length);
+        const headers: Record<string, string> = csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : {};
         // Preview auto-login fallback: when the browser blocks iframe cookies
         // (Safari ITP / private browsing / WebView), the runtime mirrors the
         // session into sessionStorage so we can forward it as a Bearer token.
@@ -54,13 +56,13 @@ const trpcClient = trpc.createClient({
             const pair = raw.split(";").find(s => s.trim().startsWith(prefix));
             const token = pair?.trim().slice(prefix.length);
             if (token) {
-              return { Authorization: `Bearer ${token}` };
+              return { ...headers, Authorization: `Bearer ${token}` };
             }
           }
         } catch {
           // sessionStorage unavailable
         }
-        return {};
+        return headers;
       },
       fetch(input, init) {
         return globalThis.fetch(input, {
