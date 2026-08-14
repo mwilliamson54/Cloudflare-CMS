@@ -22,6 +22,7 @@ import {
   listContentTypes,
   listUsers,
   listMedia,
+  listMenus,
   listTags,
   revokeApiToken,
   updateCategory,
@@ -29,6 +30,7 @@ import {
   updateMediaRecord,
   updateUserRole,
   setSettings,
+  upsertMenu,
   updateTag,
 } from "../db";
 import { issueApiToken, sha256 } from "../cms/apiTokens";
@@ -164,6 +166,12 @@ export const cmsRouter = router({
     create: procedureWithCapability("taxonomy:write").input(z.object({ name: z.string().min(1).max(160), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/), description: z.string().nullable().optional() })).mutation(({ input }) => createTag(input)),
     update: procedureWithCapability("taxonomy:write").input(z.object({ id: z.number().int().positive(), values: z.object({ name: z.string().min(1).max(160).optional(), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional(), description: z.string().nullable().optional() }) })).mutation(({ input }) => updateTag(input.id, input.values)),
     delete: procedureWithCapability("taxonomy:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => { await deleteTag(input.id); return { success: true }; }),
+  }),
+  menus: router({
+    list: procedureWithCapability("site:manage").query(listMenus),
+    save: procedureWithCapability("site:manage")
+      .input(z.object({ name: z.string().min(1).max(120), location: z.string().min(1).max(80), items: z.array(z.object({ id: z.string().min(1).max(120), label: z.string().min(1).max(120), target: z.enum(["page", "post", "category", "url"]), targetId: z.number().int().positive().optional(), url: z.string().max(2000).optional(), children: z.array(z.any()).max(20).optional() })).max(30) }))
+      .mutation(({ input }) => upsertMenu(input)),
   }),
   media: router({
     list: procedureWithCapability("content:read")

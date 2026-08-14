@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { bootstrapCms, getContentEntryBySlug, getSettings, listCategories, listContentEntries, listTags } from "../db";
+import { bootstrapCms, getContentEntryBySlug, getSettings, listCategories, listContentEntries, listMenus, listTags } from "../db";
 import { publicProcedure, router } from "../_core/trpc";
 import { cmsHooks } from "../cms/extensions";
 import "../../plugins/registry";
@@ -27,6 +27,10 @@ export const siteRouter = router({
   settings: publicProcedure.query(async () => {
     await bootstrapCms();
     return getSettings("site", true);
+  }),
+  menus: publicProcedure.query(async () => {
+    await bootstrapCms();
+    return listMenus();
   }),
   categoryPosts: publicProcedure.input(z.object({ slug: z.string().min(1).max(180) })).query(async ({ input }) => {
     await bootstrapCms();

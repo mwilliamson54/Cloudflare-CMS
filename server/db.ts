@@ -8,10 +8,12 @@ import {
   contentTags,
   contentTypes,
   media,
+  menus,
   siteSettings,
   type ApiTokenScope,
   type ContentFieldDefinition,
   type InsertUser,
+  type MenuItem,
   tags,
   users,
 } from "../drizzle/schema";
@@ -469,6 +471,20 @@ export async function setSettings(
       .onDuplicateKeyUpdate({ set: { value: value.value, isPublic: value.isPublic, updatedById } });
   }
   return getSettings(namespace);
+}
+
+export async function listMenus() {
+  const db = await requireDb();
+  return db.select().from(menus).orderBy(menus.location, menus.name);
+}
+
+export async function upsertMenu(input: { name: string; location: string; items: MenuItem[] }) {
+  const db = await requireDb();
+  await db
+    .insert(menus)
+    .values(input)
+    .onDuplicateKeyUpdate({ set: { name: input.name, items: input.items } });
+  return (await db.select().from(menus).where(eq(menus.location, input.location)).limit(1))[0] ?? null;
 }
 
 export async function createApiTokenRecord(input: {
