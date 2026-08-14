@@ -6,11 +6,21 @@ const repository = vi.hoisted(() => ({
   updateContentEntry: vi.fn(),
   deleteContentEntry: vi.fn(),
   getContentEntry: vi.fn(),
+  getMediaRecord: vi.fn(),
+  updateMediaRecord: vi.fn(),
+  deleteMediaRecord: vi.fn(),
 }));
+
+const mediaService = vi.hoisted(() => ({ persistMediaReplacement: vi.fn() }));
 
 vi.mock("../db", async () => {
   const actual = await vi.importActual<typeof import("../db")>("../db");
   return { ...actual, ...repository };
+});
+
+vi.mock("../cms/media", async () => {
+  const actual = await vi.importActual<typeof import("../cms/media")>("../cms/media");
+  return { ...actual, ...mediaService };
 });
 
 import { cmsRouter } from "./cms";
@@ -68,6 +78,10 @@ describe("CMS content lifecycle procedures", () => {
     repository.createContentEntry.mockImplementation(async (input: unknown) => ({ id: 71, ...input }));
     repository.updateContentEntry.mockImplementation(async (id: number, values: unknown) => ({ ...entry(12, id), ...values }));
     repository.deleteContentEntry.mockResolvedValue(true);
+    repository.getMediaRecord.mockResolvedValue({ id: 44, uploadedById: 12, fileName: "look.jpg" });
+    repository.updateMediaRecord.mockImplementation(async (id: number, values: unknown) => ({ id, ...values }));
+    repository.deleteMediaRecord.mockResolvedValue(undefined);
+    mediaService.persistMediaReplacement.mockResolvedValue({ id: 44, fileName: "updated.jpg" });
   });
 
   it("creates a draft post under the authenticated author and sanitizes rich HTML", async () => {
@@ -141,5 +155,24 @@ describe("CMS content lifecycle procedures", () => {
     const editor = cmsRouter.createCaller(context("editor", 4));
     await expect(editor.content.update({ id: 33, values: { status: "archived" } })).resolves.toMatchObject({ id: 33, status: "archived" });
     await expect(editor.content.delete({ id: 33 })).resolves.toEqual({ deleted: true });
+  });
+
+  it("enforces uploader ownership for author and contributor media updates, replacements, and deletion", async () => {
+    const otherAuthor = cmsRouter.createCaller(context("author", 99));
+    const contributor = cmsRouter.createCaller(context("contributor", 88));
+    const owner = cmsRouter.createCaller(context("author", 12));
+    const editor = cmsRouter.createCaller(context("editor", 4));
+
+    await expect(otherAuthor.media.update({ id: 44, values: { altText: "Unauthorized" } })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(contributor.media.delete({ id: 44 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(otherAuthor.media.replace({ id: 44, fileName: "takeover.jpg", mimeType: "image/jpeg", dataBase64: "ZmFrZQ==" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(repository.updateMediaRecord).not.toHaveBeenCalled();
+    expect(repository.deleteMediaRecord).not.toHaveBeenCalled();
+    expect(mediaService.persistMediaReplacement).not.toHaveBeenCalled();
+
+    await expect(owner.media.update({ id: 44, values: { altText: "Owned image" } })).resolves.toMatchObject({ id: 44 });
+    await expect(editor.media.delete({ id: 44 })).resolves.toEqual({ success: true });
+    expect(repository.updateMediaRecord).toHaveBeenCalledWith(44, { altText: "Owned image" });
+    expect(repository.deleteMediaRecord).toHaveBeenCalledWith(44);
   });
 });

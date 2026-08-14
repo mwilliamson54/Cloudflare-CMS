@@ -36,7 +36,7 @@ import {
 import { issueApiToken, sha256 } from "../cms/apiTokens";
 import { listEditorBlocks } from "../cms/blocks";
 import { persistMediaReplacement, persistMediaUpload } from "../cms/media";
-import { requireCapability, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
+import { requireCapability, requireEntryOwnership, requireMediaOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
 import { analyzeSeo } from "../cms/seoAnalysis";
 import { summarizeSeo } from "../cms/seoSummary";
 import { sanitizeRichHtml } from "../cms/sanitize";
@@ -92,7 +92,7 @@ const contentInput = z
   });
 
 export const cmsRouter = router({
-  bootstrap: procedureWithCapability("content:read").mutation(async () => {
+  bootstrap: procedureWithCapability("site:manage").mutation(async () => {
     await bootstrapCms();
     return { success: true };
   }),
@@ -114,10 +114,7 @@ export const cmsRouter = router({
     }),
   }),
   contentTypes: router({
-    list: procedureWithCapability("content:read").query(async () => {
-      await bootstrapCms();
-      return listContentTypes();
-    }),
+    list: procedureWithCapability("content:read").query(listContentTypes),
     create: procedureWithCapability("site:manage")
       .input(z.object({ key: z.string().regex(/^[a-z][a-z0-9_-]*$/), label: z.string().min(1), description: z.string().nullable().optional(), fieldDefinitions: z.array(fieldSchema) }))
       .mutation(({ input }) => createCustomContentType(input)),
@@ -194,12 +191,21 @@ export const cmsRouter = router({
       .mutation(async ({ ctx, input }) => {
         const record = await getMediaRecord(input.id);
         if (!record) throw new Error("Media record not found.");
+        requireMediaOwnership(ctx.user, record);
         return persistMediaReplacement({ ...input, mediaId: input.id, uploadedById: ctx.user.id });
       }),
     update: procedureWithCapability("media:write")
       .input(z.object({ id: z.number().int().positive(), values: z.object({ altText: z.string().max(500).nullable().optional(), title: z.string().max(255).nullable().optional(), caption: z.string().nullable().optional(), description: z.string().nullable().optional() }) }))
-      .mutation(({ input }) => updateMediaRecord(input.id, input.values)),
-    delete: procedureWithCapability("media:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        const record = await getMediaRecord(input.id);
+        if (!record) throw new Error("Media record not found.");
+        requireMediaOwnership(ctx.user, record);
+        return updateMediaRecord(input.id, input.values);
+      }),
+    delete: procedureWithCapability("media:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
+      const record = await getMediaRecord(input.id);
+      if (!record) throw new Error("Media record not found.");
+      requireMediaOwnership(ctx.user, record);
       await deleteMediaRecord(input.id);
       return { success: true };
     }),
@@ -229,10 +235,7 @@ export const cmsRouter = router({
     }),
   }),
   settings: router({
-    get: procedureWithCapability("site:manage").query(async () => {
-      await bootstrapCms();
-      return getSettings();
-    }),
+    get: procedureWithCapability("site:manage").query(() => getSettings()),
     update: procedureWithCapability("site:manage")
       .input(z.object({ siteTitle: z.string().min(1).max(120), siteDescription: z.string().min(1).max(500), siteIndexing: z.boolean(), homepageCategorySlugs: z.array(z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)).max(8), footerTagline: z.string().min(1).max(500), footerLocation: z.string().min(1).max(160), footerInstagramUrl: z.string().url().max(2000) }))
       .mutation(async ({ ctx, input }) => setSettings([
@@ -247,7 +250,6 @@ export const cmsRouter = router({
   }),
   appearance: router({
     get: procedureWithCapability("site:manage").query(async () => {
-      await bootstrapCms();
       const settings = await getSettings();
       return {
         activeTheme: settings.theme === "fashion-editorial" ? "fashion-editorial" : "fashion-editorial",

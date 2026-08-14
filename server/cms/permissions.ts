@@ -43,6 +43,13 @@ export function requireEntryOwnership(user: User, entry: { authorId: number }): 
   }
 }
 
+/** Authors and contributors may only alter media records they uploaded. */
+export function requireMediaOwnership(user: User, record: { uploadedById: number }): void {
+  if ((user.role === "author" || user.role === "contributor") && record.uploadedById !== user.id) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "You may only manage media you uploaded." });
+  }
+}
+
 /** Prevent any account from accidentally removing its own last administrator access. */
 export function requireRoleChangeAllowed(actor: User, target: Pick<User, "id" | "role">, nextRole: CmsRole): void {
   requireCapability(actor, "users:manage");

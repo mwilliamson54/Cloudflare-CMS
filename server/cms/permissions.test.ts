@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { can, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "./permissions";
+import { can, requireEntryOwnership, requireMediaOwnership, requireRoleChangeAllowed, type CmsCapability } from "./permissions";
 
 describe("CMS role policy", () => {
   it("enforces the WordPress-style role capability matrix", () => {
@@ -25,6 +25,17 @@ describe("CMS role policy", () => {
     expect(() => requireEntryOwnership(contributor, { authorId: 9 })).not.toThrow();
     expect(() => requireEntryOwnership(author, { authorId: 8 })).toThrow(/only manage content/i);
     expect(() => requireEntryOwnership(contributor, { authorId: 8 })).toThrow(/only manage content/i);
+  });
+
+  it("restricts author and contributor mutations to media they uploaded", () => {
+    const author = { id: 7, role: "author" } as any;
+    const contributor = { id: 9, role: "contributor" } as any;
+    const editor = { id: 11, role: "editor" } as any;
+    expect(() => requireMediaOwnership(author, { uploadedById: 7 })).not.toThrow();
+    expect(() => requireMediaOwnership(contributor, { uploadedById: 9 })).not.toThrow();
+    expect(() => requireMediaOwnership(author, { uploadedById: 8 })).toThrow(/only manage media/i);
+    expect(() => requireMediaOwnership(contributor, { uploadedById: 8 })).toThrow(/only manage media/i);
+    expect(() => requireMediaOwnership(editor, { uploadedById: 8 })).not.toThrow();
   });
 
   it("blocks non-admin role changes and prevents administrator self-demotion", () => {
