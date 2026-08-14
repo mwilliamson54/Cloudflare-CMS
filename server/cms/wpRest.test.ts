@@ -38,6 +38,14 @@ describe("WordPress REST adapter", () => {
     await expect(response.json()).resolves.toMatchObject([{ id: 5, status: "published", title: { rendered: "Published" } }]);
   });
 
+  it("returns published page collections through the page content-type contract", async () => {
+    const response = await request("/api/wp/v2/pages?search=studio&page=3&per_page=5");
+
+    expect(response.status).toBe(200);
+    expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "page", publishedOnly: true, query: "studio", page: 3, perPage: 5 });
+    expect(response.headers.get("x-wp-total")).toBe("23");
+  });
+
   it.each(["draft", "scheduled", "archived"] as const)("does not expose an individual %s entry", async status => {
     repository.getContentEntry.mockResolvedValue({ ...published, status });
     const response = await request("/api/wp/v2/posts/5");
