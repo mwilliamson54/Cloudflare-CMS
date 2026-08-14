@@ -52,6 +52,10 @@ The local WordPress-style adapter now has end-to-end HTTP contract tests. They c
 
 The public site router now has complementary visibility coverage: public post lists preserve their search/pagination inputs while requesting published content only, public pages request published entries only, and an unavailable post slug resolves to `null` rather than exposing scheduled, draft, or archived records. This closes the public query boundary around the existing lifecycle-status enforcement while fuller database-backed scheduled and custom-entry integration tests remain tracked.
 
+## Query-Shape Scalability Increment
+
+Paginated content listings no longer hydrate categories and tags with two additional queries per entry. The repository now retrieves all category relationships and all tag relationships for the current page in two batched relation queries, groups them by entry ID, and preserves the existing entry contract. Consequently, a page of up to 100 entries has a bounded taxonomy-query shape rather than scaling linearly with the number of rows. Existing composite content-status/publication indexes, unique type-and-slug lookup, media creation ordering, and sitemap URL cap remain in place; full-text search and keyset pagination are retained as future scale-stage work.
+
 ## Structured Markdown Authoring
 
 The Markdown mode now treats the article body as an ordered sequence of portable Markdown blocks. Editors can insert registered core or enabled-plugin blocks, edit each block independently, move it up or down, and remove it without hand-managing separator syntax. The persisted format remains ordinary Markdown separated by blank lines, so REST responses, previews, extensions, and export paths retain a stable text contract. Visual and source-HTML modes remain available; source-mode previews stay sandboxed and all supplied HTML continues to pass through the server-side allowlist sanitizer before persistence.

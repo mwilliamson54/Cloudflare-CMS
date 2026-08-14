@@ -307,7 +307,22 @@ export async function listContentEntries(options: {
     .limit(perPage)
     .offset((page - 1) * perPage);
   const totalRow = (await db.select({ value: count() }).from(contentEntries).where(and(...conditions)))[0];
-  return { entries: await Promise.all(rows.map(hydrateEntry)), total: Number(totalRow?.value ?? 0) };
+  return { entries: await hydrateEntries(rows), total: Number(totalRow?.value ?? 0) };
+}
+
+async function hydrateEntries(entries: Array<typeof contentEntries.$inferSelect>) {
+  if (!entries.length) return [];
+  const db = await requireDb();
+  const entryIds = entries.map(entry => entry.id);
+  const [categoryRows, tagRows] = await Promise.all([
+    db.select({ entryId: contentCategories.contentEntryId, id: categories.id, name: categories.name, slug: categories.slug }).from(contentCategories).innerJoin(categories, eq(contentCategories.categoryId, categories.id)).where(inArray(contentCategories.contentEntryId, entryIds)),
+    db.select({ entryId: contentTags.contentEntryId, id: tags.id, name: tags.name, slug: tags.slug }).from(contentTags).innerJoin(tags, eq(contentTags.tagId, tags.id)).where(inArray(contentTags.contentEntryId, entryIds)),
+  ]);
+  const categoriesByEntry = new Map<number, Array<{ id: number; name: string; slug: string }>>();
+  const tagsByEntry = new Map<number, Array<{ id: number; name: string; slug: string }>>();
+  for (const row of categoryRows) categoriesByEntry.set(row.entryId, [...(categoriesByEntry.get(row.entryId) ?? []), { id: row.id, name: row.name, slug: row.slug }]);
+  for (const row of tagRows) tagsByEntry.set(row.entryId, [...(tagsByEntry.get(row.entryId) ?? []), { id: row.id, name: row.name, slug: row.slug }]);
+  return entries.map(entry => ({ ...entry, categories: categoriesByEntry.get(entry.id) ?? [], tags: tagsByEntry.get(entry.id) ?? [] }));
 }
 
 async function hydrateEntry(entry: typeof contentEntries.$inferSelect) {
