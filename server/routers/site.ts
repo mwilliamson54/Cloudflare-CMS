@@ -28,6 +28,9 @@ export const siteRouter = router({
     const publishedParent = parent?.status === "published" ? { title: parent.title, slug: parent.slug } : null;
     return { ...entry, parent: publishedParent };
   }),
+  customEntry: publicProcedure.input(z.object({ contentTypeKey: z.string().min(1).max(64), slug: z.string().min(1).max(320) })).query(async ({ input }) => {
+    return getContentEntryBySlug(input.contentTypeKey, input.slug);
+  }),
   categories: publicProcedure.query(listCategories),
   tags: publicProcedure.query(listTags),
   settings: publicProcedure.query(async () => {

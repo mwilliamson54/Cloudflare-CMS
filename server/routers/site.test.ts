@@ -37,6 +37,13 @@ describe("public content lifecycle visibility", () => {
     expect(repository.getContentEntryBySlug).toHaveBeenCalledWith("page", "studio");
   });
 
+  it("uses the same published-only lookup contract for a generic custom entry", async () => {
+    repository.getContentEntryBySlug.mockResolvedValue(null);
+
+    await expect(siteRouter.createCaller({} as any).customEntry({ contentTypeKey: "lookbook", slug: "autumn-study" })).resolves.toBeNull();
+    expect(repository.getContentEntryBySlug).toHaveBeenCalledWith("lookbook", "autumn-study");
+  });
+
   it("exposes a published parent page context without querying post archives", async () => {
     repository.getContentEntryBySlug.mockResolvedValue({ id: 22, slug: "team", title: "Team", parentId: 11, status: "published" });
     repository.getContentEntry.mockResolvedValue({ id: 11, slug: "about", title: "About", status: "published" });
