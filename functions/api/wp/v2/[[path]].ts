@@ -54,3 +54,30 @@ export const onRequestPost = async (context: Context) => {
     return wpError(404,"rest_no_route","No route was found matching the URL and request method.");
   } catch (error) { return wpError(401, "cms_unauthorized", error instanceof Error ? error.message : "Authentication failed."); }
 };
+
+export const onRequestPatch = async (context: Context) => {
+  const [resource, id] = segments(context);
+  if (resource !== "media" || !id) return wpError(404, "rest_no_route", "No route was found matching the URL and request method.");
+  try {
+    const claims = await requireToken(context, "media:write");
+    const input = await context.request.json<any>();
+    if (!input.fileName || !input.mimeType || !input.dataBase64) return wpError(400, "rest_upload_invalid", "fileName, mimeType, and dataBase64 are required.");
+    const supported = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "application/pdf"];
+    if (!supported.includes(input.mimeType)) return wpError(400, "rest_upload_invalid_type", "Unsupported media type.");
+    const record = await context.env.CMS_DB.prepare("SELECT id FROM media WHERE id=? LIMIT 1").bind(id).first();
+    if (!record) return wpError(404, "rest_post_invalid_id", "Invalid media ID.");
+    const bytes = fromBase64Url(String(input.dataBase64).replace(/\+/g, "-").replace(/\//g, "_"));
+    if (!bytes.byteLength || bytes.byteLength > 10 * 1024 * 1024) return wpError(413, "rest_upload_too_large", "Media uploads must be between 1 byte and 10 MB.");
+    const original = String(input.fileName).slice(0, 255);
+    const safe = original.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "-").slice(0, 160) || "upload";
+    const ext = ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif", "image/gif": "gif", "application/pdf": "pdf" } as Record<string, string>)[input.mimeType];
+    const date = new Date();
+    const key = `uploads/${date.getUTCFullYear()}/${String(date.getUTCMonth() + 1).padStart(2, "0")}/u${claims.sub}/${safe}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    await context.env.CMS_MEDIA.put(key, bytes, { httpMetadata: { contentType: input.mimeType } });
+    const url = `/media/${key.split("/").map(encodeURIComponent).join("/")}`;
+    await context.env.CMS_DB.prepare("UPDATE media SET storage_key=?, storage_provider=?, url=?, file_name=?, original_file_name=?, mime_type=?, size_bytes=?, updated_at=? WHERE id=?").bind(key, "cloudflare-r2", url, `${safe}.${ext}`, original, input.mimeType, bytes.byteLength, new Date().toISOString(), id).run();
+    return json({ id: Number(id), source_url: url, mime_type: input.mimeType, file_name: `${safe}.${ext}` });
+  } catch (error) {
+    return wpError(401, "cms_unauthorized", error instanceof Error ? error.message : "Authentication failed.");
+  }
+};

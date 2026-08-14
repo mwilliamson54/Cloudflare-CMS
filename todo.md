@@ -9,7 +9,7 @@
 - [x] Implement scheduled publishing with Cloudflare-compatible, idempotent processing.
 - [x] Build category and tag management, including hierarchical category support.
 - [ ] Build a rich Markdown editor with a secure live preview and extensible block model.
-- [ ] Build an S3-compatible media-library workflow with upload, browse, metadata, replace, search, and delete-reference actions.
+- [x] Build an S3-compatible media-library workflow with upload, browse, metadata, replace, search, and delete-reference actions.
 - [ ] Build a premium admin dashboard using the provided dashboard layout, with complete content, taxonomies, media, tokens, SEO, menus, settings, themes, plugins, and system areas.
 - [x] Build a polished, responsive fashion-magazine frontend with hero, configurable category sections, article cards, article detail views, and search.
 - [ ] Implement SEO metadata, canonical URLs, Open Graph cards, robots controls, dynamic sitemap.xml, and robots.txt.
