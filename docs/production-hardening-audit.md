@@ -64,6 +64,10 @@ CMS mutations use the authenticated application session for the administration i
 
 The protected tRPC mutation path relies on the application OAuth session boundary. As a production deployment requirement, the hosting origin must remain same-site and HTTPS-only, and any future cross-origin administration integration must add an explicit origin/CSRF-token middleware before enabling cookie-authenticated mutations. No custom head/body/CSS/JS execution settings are exposed in the current administration UI; this is intentional until a separately reviewed trust model and CSP strategy are implemented.
 
+## Media Delivery Review
+
+R2 media uses stable year/month/user object keys, metadata-only database records, server-side MIME and size validation, and immutable delivery caching. The administration UI processes a multi-file queue without aborting successful neighboring uploads after one failure; the practical retry operation is reselecting or re-dropping the individual failed file. Original-only delivery is intentional in the first free-tier deployment. The documented derivative strategy defers thumbnails to a controlled write-time pipeline rather than adding on-demand transformation cost or runtime work.
+
 ## Structured Markdown Authoring
 
 The Markdown mode now treats the article body as an ordered sequence of portable Markdown blocks. Editors can insert registered core or enabled-plugin blocks, edit each block independently, move it up or down, and remove it without hand-managing separator syntax. The persisted format remains ordinary Markdown separated by blank lines, so REST responses, previews, extensions, and export paths retain a stable text contract. Visual and source-HTML modes remain available; source-mode previews stay sandboxed and all supplied HTML continues to pass through the server-side allowlist sanitizer before persistence.

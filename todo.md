@@ -57,3 +57,4 @@
 - [x] Add structured Markdown block controls for insertion, ordering, and removal while keeping the existing multi-mode source and preview workflow.
 - [x] Eliminate per-entry taxonomy hydration queries from paginated content lists while preserving entry category and tag contracts.
 - [ ] Add explicit origin/CSRF enforcement before allowing any cross-origin cookie-authenticated CMS mutation flow.
+- [x] Document the R2 original-only thumbnail strategy, per-file retry behavior, immutable delivery caching, and future derivative-pipeline boundary.
