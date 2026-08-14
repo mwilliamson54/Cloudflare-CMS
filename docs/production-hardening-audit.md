@@ -64,6 +64,8 @@ CMS mutations use the authenticated application session for the administration i
 
 The protected tRPC mutation path relies on the application OAuth session boundary. As a production deployment requirement, the hosting origin must remain same-site and HTTPS-only, and any future cross-origin administration integration must add an explicit origin/CSRF-token middleware before enabling cookie-authenticated mutations. No custom head/body/CSS/JS execution settings are exposed in the current administration UI; this is intentional until a separately reviewed trust model and CSP strategy are implemented.
 
+Viewer-level mutation regression coverage now spans content creation and deletion, token issuance, menu changes, media metadata changes, taxonomy creation, site settings, bundled-plugin configuration, and user role updates. These calls consistently fail at the capability boundary before touching storage or persistence. Higher-privilege ownership and publication tests remain separately covered in the content lifecycle and user-management suites.
+
 ## Media Delivery Review
 
 R2 media uses stable year/month/user object keys, metadata-only database records, server-side MIME and size validation, and immutable delivery caching. The administration UI processes a multi-file queue without aborting successful neighboring uploads after one failure; the practical retry operation is reselecting or re-dropping the individual failed file. Original-only delivery is intentional in the first free-tier deployment. The documented derivative strategy defers thumbnails to a controlled write-time pipeline rather than adding on-demand transformation cost or runtime work.

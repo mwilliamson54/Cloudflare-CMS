@@ -21,7 +21,7 @@ function viewerContext(): TrpcContext {
 }
 
 describe("CMS procedure authorization", () => {
-  it("blocks a viewer from creating content and API tokens", async () => {
+  it("blocks a viewer from all sensitive CMS mutation families", async () => {
     const caller = cmsRouter.createCaller(viewerContext());
 
     await expect(
@@ -37,5 +37,10 @@ describe("CMS procedure authorization", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(caller.content.delete({ id: 1 })).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(caller.menus.save({ name: "Restricted", location: "header", items: [{ id: "menu-1", label: "Home", target: "url", url: "/" }] })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.media.update({ id: 1, values: { altText: "Restricted" } })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.categories.create({ name: "Restricted", slug: "restricted" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.settings.update({ siteTitle: "Restricted" })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.appearance.update({ enabledPlugins: [] })).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.users.updateRole({ id: 1, role: "author" })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 });
