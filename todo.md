@@ -31,7 +31,7 @@
 - [ ] Implement drag-and-drop multi-file media uploads with validation, progress, retry, gallery metadata, and detail editing.
 - [x] Implement protected draft previews rendered through the real public theme for posts, pages, scheduled content, and templates.
 - [x] Add visual and source/HTML authoring modes with allowed-HTML sanitization and documented content safety rules.
-- [ ] Separate page-specific hierarchy/templates from post-specific archives, taxonomy, author, related-content, and templates.
+- [x] Separate page-specific hierarchy/templates from post-specific archives, taxonomy, author, related-content, and templates.
 - [x] Add theme-level post/page template selection and verify template choice changes protected public preview rendering.
 - [ ] Audit and improve dynamic homepage, archive, category, tag, search, sitemap, and cache-invalidation flows after publication changes.
 - [x] Audit REST endpoints and document the WordPress-compatibility adapter’s supported users, individual resources, pagination, filtering, errors, writes, trash/delete behavior, plus intentional menu/settings administrative-resource non-support boundaries.
