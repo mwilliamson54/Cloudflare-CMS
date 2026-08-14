@@ -14,7 +14,9 @@ import {
   type ContentFieldDefinition,
   type InsertUser,
   type MenuItem,
+  plugins,
   tags,
+  themes,
   users,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -123,6 +125,24 @@ export async function bootstrapCms(): Promise<void> {
   for (const setting of defaults) {
     await db.insert(siteSettings).values({ namespace: "site", ...setting }).onDuplicateKeyUpdate({ set: { key: setting.key } });
   }
+  await db.insert(themes).values({ key: "fashion-editorial", name: "Fashion Editorial", version: "1.0.0", settings: { mode: "bundled-single-theme", supports: ["homepage", "archives", "articles", "pages", "menus", "footer"] }, isActive: true }).onDuplicateKeyUpdate({ set: { name: "Fashion Editorial", version: "1.0.0", settings: { mode: "bundled-single-theme", supports: ["homepage", "archives", "articles", "pages", "menus", "footer"] }, isActive: true } });
+  await db.insert(plugins).values({ key: "reading-time", name: "Reading Time", version: "1.0.0", settings: { trusted: true, blocks: ["reading-time"] }, isActive: true }).onDuplicateKeyUpdate({ set: { name: "Reading Time", version: "1.0.0", settings: { trusted: true, blocks: ["reading-time"] } } });
+}
+
+export async function listThemes() {
+  const db = await requireDb();
+  return db.select().from(themes).orderBy(desc(themes.isActive), themes.name);
+}
+
+export async function listPlugins() {
+  const db = await requireDb();
+  return db.select().from(plugins).orderBy(plugins.name);
+}
+
+export async function setBundledPluginActivation(enabledPlugins: string[]) {
+  const db = await requireDb();
+  await db.update(plugins).set({ isActive: enabledPlugins.includes("reading-time") }).where(eq(plugins.key, "reading-time"));
+  return listPlugins();
 }
 
 export async function listContentTypes() {

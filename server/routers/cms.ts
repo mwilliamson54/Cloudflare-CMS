@@ -20,6 +20,8 @@ import {
   listCategories,
   listContentEntries,
   listContentTypes,
+  listPlugins,
+  listThemes,
   listUsers,
   listMedia,
   listMenus,
@@ -32,6 +34,7 @@ import {
   updateMediaRecord,
   updateUserRole,
   setSettings,
+  setBundledPluginActivation,
   upsertMenu,
   updateTag,
 } from "../db";
@@ -276,16 +279,22 @@ export const cmsRouter = router({
   appearance: router({
     get: procedureWithCapability("site:manage").query(async () => {
       const settings = await getSettings();
+      const themes = await listThemes();
+      const plugins = await listPlugins();
       return {
-        activeTheme: settings.theme === "fashion-editorial" ? "fashion-editorial" : "fashion-editorial",
+        activeTheme: themes.find(theme => theme.isActive)?.key ?? (settings.theme === "fashion-editorial" ? "fashion-editorial" : "fashion-editorial"),
         themeMode: "bundled-single-theme" as const,
-        enabledPlugins: Array.isArray(settings.enabledPlugins) ? settings.enabledPlugins.filter((key): key is string => key === "reading-time") : [],
+        themes,
+        plugins,
+        enabledPlugins: plugins.filter(plugin => plugin.isActive).map(plugin => plugin.key),
       };
     }),
     update: procedureWithCapability("site:manage")
       .input(z.object({ enabledPlugins: z.array(z.literal("reading-time")).max(1) }))
-      .mutation(({ ctx, input }) => setSettings([
-        { key: "enabledPlugins", value: input.enabledPlugins, isPublic: false },
-      ], ctx.user.id)),
+      .mutation(async ({ ctx, input }) => {
+        await setBundledPluginActivation(input.enabledPlugins);
+        await setSettings([{ key: "enabledPlugins", value: input.enabledPlugins, isPublic: false }], ctx.user.id);
+        return { enabledPlugins: input.enabledPlugins };
+      }),
   }),
 });
