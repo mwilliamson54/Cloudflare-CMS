@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getContentEntryBySlug, getSettings, listCategories, listContentEntries, listMenus, listTags } from "../db";
+import { getContentEntry, getContentEntryBySlug, getSettings, listCategories, listContentEntries, listMenus, listTags } from "../db";
 import { publicProcedure, router } from "../_core/trpc";
 import { cmsHooks } from "../cms/extensions";
 import "../../plugins/registry";
@@ -22,7 +22,11 @@ export const siteRouter = router({
     return listContentEntries({ contentTypeKey: "page", publishedOnly: true, perPage: 100 });
   }),
   page: publicProcedure.input(z.object({ slug: z.string().min(1).max(320) })).query(async ({ input }) => {
-    return getContentEntryBySlug("page", input.slug);
+    const entry = await getContentEntryBySlug("page", input.slug);
+    if (!entry) return null;
+    const parent = entry.parentId ? await getContentEntry(entry.parentId) : null;
+    const publishedParent = parent?.status === "published" ? { title: parent.title, slug: parent.slug } : null;
+    return { ...entry, parent: publishedParent };
   }),
   categories: publicProcedure.query(listCategories),
   tags: publicProcedure.query(listTags),
