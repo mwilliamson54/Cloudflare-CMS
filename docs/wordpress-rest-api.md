@@ -46,3 +46,19 @@ The `posts`, `pages`, `media`, and `users` collections accept `page` and `per_pa
 ## Media Replacement
 
 `PATCH /api/wp/v2/media/{id}` accepts the same validated file fields as upload: `fileName`, `mimeType`, and `dataBase64`. The CMS writes the replacement to a new R2 object and updates the existing metadata record rather than creating a new media ID. Existing post and page references therefore remain valid.
+
+## Errors, Visibility, and Deletion
+
+Public post and page collections contain only `published` content. Requests for a draft, scheduled, archived, or missing individual entry return HTTP `404` with the WordPress-style body below rather than disclosing the entry’s status or metadata.
+
+```json
+{
+  "code": "rest_post_invalid_id",
+  "message": "Invalid post ID.",
+  "data": { "status": 404 }
+}
+```
+
+Authentication and capability failures use the same stable shape: `{ "code", "message", "data": { "status" } }`. A missing or invalid bearer token yields `401`; a valid token without the required scope or publication capability yields `403`; development rate limiting returns `429` with `rest_rate_limited`. Unknown methods or resources return `404` with `rest_no_route`.
+
+The current REST adapter deliberately does **not** expose destructive `DELETE` routes. Authenticated hard deletion is available only through the protected CMS administration procedures, where author/contributor ownership rules, editor cross-author authority, and child-page unparenting are enforced. This avoids introducing an undocumented WordPress trash state before it has a recoverable data model. A future REST delete/trash endpoint will require an explicit `force`/trash contract and matching Cloudflare Pages parity tests.
