@@ -5,6 +5,7 @@
 | `DATABASE_URL` | Development adapter | MySQL-compatible development database connection. |
 | `JWT_SECRET` | Development adapter | JWT signing key, at least 32 characters. |
 | `CANONICAL_ORIGIN` | Development adapter | Absolute public origin for canonical and sitemap URLs. |
+| `SITE_NAME` | Development adapter | Publication name used by the SSR fallback and Open Graph site identity. |
 | `CMS_DB` | Cloudflare binding | D1 database binding. |
 | `CMS_MEDIA` | Cloudflare binding | R2 bucket binding. |
 | `CMS_CACHE` | Cloudflare binding | Optional KV binding for cache and throttling policies. |

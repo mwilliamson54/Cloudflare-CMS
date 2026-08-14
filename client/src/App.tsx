@@ -1,21 +1,24 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import Admin from "./pages/Admin";
 import { Article, BlogArchive, CategoryArchive, SearchResults, TagArchive } from "./pages/Blog";
 import { Page } from "./pages/Page";
 import { PreviewArticle } from "./pages/Preview";
+
+const Admin = lazy(() => import("./pages/Admin"));
+function AdminRoute() { return <Suspense fallback={<main className="min-h-screen bg-[#fbfaf7]" />}><Admin /></Suspense>; }
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
-      <Route path={"/admin/:rest*"} component={Admin} />
-      <Route path={"/admin"} component={Admin} />
+      <Route path={"/admin/:rest*"} component={AdminRoute} />
+      <Route path={"/admin"} component={AdminRoute} />
       <Route path={"/preview/:id"} component={PreviewArticle} />
       <Route path={"/page/:slug"} component={Page} />
       <Route path={"/blog/:slug"} component={Article} />

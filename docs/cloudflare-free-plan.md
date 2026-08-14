@@ -5,7 +5,7 @@ At the time of this review, the CMS architecture fits Cloudflare’s free-plan o
 | Platform area | Current free-plan constraint | CMS design response |
 | --- | --- | --- |
 | Worker requests | 100,000 requests per day; 10 ms CPU per request; 128 MB memory; 50 subrequests per invocation. [1] | Keep Functions thin, avoid SSR-wide database fanout, and cap CMS REST lists at 100 entries. |
-| Pages Functions | Function requests count toward the Workers quota. [4] | Public theme behavior is primarily static/client-side; public Functions are limited to API, sitemap, robots, and media delivery. |
+| Pages Functions | Function requests count toward the Workers quota. [4] | Public Functions currently provide API, sitemap, robots, and media delivery. The local Node SSR adapter is intentionally not treated as a Pages deployment path; any edge renderer must retain bounded public-query prefetching and respect the daily Worker request budget. |
 | D1 | Free accounts have 10 databases, 500 MB per database, 5 GB total storage, and 50 queries per Worker invocation. [2] | Store metadata only; use indexed primary queries, bounded pagination, and no per-card N+1 requests. |
 | R2 | Free usage includes 10 GB-month storage, 1 million Class A operations, and 10 million Class B operations per month. [3] | Store originals in year/month keys, cache immutable public media, and avoid generating thumbnails synchronously on reads. |
 | Pages deploys | The Free plan allows 500 builds per month, one concurrent build, 20,000 static files per site, and 25 MiB maximum asset size. [4] | Keep generated media out of the deployment bundle and deliver it from R2. |
