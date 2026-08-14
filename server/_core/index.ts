@@ -11,6 +11,7 @@ import { serveStatic, setupVite } from "./vite";
 import { registerWordPressRestRoutes } from "../cms/wpRest";
 import { registerSeoRoutes } from "../cms/seo";
 import { trpcRequestGuard } from "./trpcGuard";
+import { bootstrapCms } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -32,6 +33,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Initialize idempotent local defaults before accepting requests. Public and
+  // read-only procedures must never cause persistent bootstrap writes.
+  await bootstrapCms();
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads

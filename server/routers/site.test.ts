@@ -14,6 +14,15 @@ describe("public content lifecycle visibility", () => {
     expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "post", publishedOnly: true, query: "tailoring", page: 2, perPage: 25 });
   });
 
+  it("does not invoke bootstrap writes while serving public read procedures", async () => {
+    const caller = siteRouter.createCaller({} as any);
+    await caller.posts();
+    await caller.pages();
+    await caller.settings();
+    await caller.menus();
+    expect(repository.bootstrapCms).not.toHaveBeenCalled();
+  });
+
   it("queries only published pages and does not surface unavailable post slugs", async () => {
     await siteRouter.createCaller({} as any).pages();
     await expect(siteRouter.createCaller({} as any).post({ slug: "scheduled-story" })).resolves.toBeNull();
