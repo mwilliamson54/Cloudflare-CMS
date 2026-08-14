@@ -44,6 +44,7 @@ import { persistMediaReplacement, persistMediaUpload } from "../cms/media";
 import { requireCapability, requireEntryOwnership, requireMediaOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
 import { analyzeSeo } from "../cms/seoAnalysis";
 import { summarizeSeo } from "../cms/seoSummary";
+import { getCachedSeoSummary, invalidateSeoSummaryCache } from "../cms/seoSummaryCache";
 import { sanitizeRichHtml } from "../cms/sanitize";
 import { CUSTOM_CSS_MAX_LENGTH, getCustomCssValidationError } from "../cms/customCss";
 import { protectedProcedure, router } from "../_core/trpc";
@@ -114,9 +115,9 @@ export const cmsRouter = router({
       requireEntryOwnership(ctx.user, entry);
       return analyzeSeo({ title: entry.title, description: entry.seoDescription || entry.excerpt, focusKeyword: entry.focusKeyword, bodyMarkdown: entry.bodyMarkdown, featuredMediaId: entry.featuredMediaId, canonicalUrl: entry.canonicalUrl, robotsIndex: entry.robotsIndex });
     }),
-    summary: procedureWithCapability("site:manage").input(z.object({ limit: z.number().int().min(1).max(100).default(50) }).optional()).query(async ({ input }) => {
-      const result = await listContentEntries({ contentTypeKey: "post", perPage: input?.limit ?? 50 });
-      return summarizeSeo(result.entries);
+    summary: procedureWithCapability("site:manage").input(z.object({ limit: z.number().int().min(1).max(100).default(50) }).optional()).query(({ input }) => {
+      const limit = input?.limit ?? 50;
+      return getCachedSeoSummary(limit, async () => summarizeSeo((await listContentEntries({ contentTypeKey: "post", perPage: limit })).entries));
     }),
   }),
   contentTypes: router({
@@ -138,7 +139,9 @@ export const cmsRouter = router({
     }),
     create: procedureWithCapability("content:write").input(contentInput).mutation(async ({ ctx, input }) => {
       if (input.status === "published" || input.status === "scheduled") requireCapability(ctx.user, "content:publish");
-      return createContentEntry({ ...input, authorId: ctx.user.id, bodyHtml: sanitizeRichHtml(input.bodyHtml) });
+      const created = await createContentEntry({ ...input, authorId: ctx.user.id, bodyHtml: sanitizeRichHtml(input.bodyHtml) });
+      invalidateSeoSummaryCache();
+      return created;
     }),
     update: procedureWithCapability("content:write")
       .input(z.object({ id: z.number().int().positive(), values: contentInput.partial() }))
@@ -147,13 +150,17 @@ export const cmsRouter = router({
         if (!entry) throw new Error("Content entry not found.");
         requireEntryOwnership(ctx.user, entry);
         if (input.values.status === "published" || input.values.status === "scheduled") requireCapability(ctx.user, "content:publish");
-        return updateContentEntry(input.id, { ...input.values, bodyHtml: input.values.bodyHtml === undefined ? undefined : sanitizeRichHtml(input.values.bodyHtml) });
+        const updated = await updateContentEntry(input.id, { ...input.values, bodyHtml: input.values.bodyHtml === undefined ? undefined : sanitizeRichHtml(input.values.bodyHtml) });
+        invalidateSeoSummaryCache();
+        return updated;
       }),
     delete: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const entry = await getContentEntry(input.id);
       if (!entry) throw new Error("Content entry not found.");
       requireEntryOwnership(ctx.user, entry);
-      return { deleted: await deleteContentEntry(input.id) };
+      const deleted = await deleteContentEntry(input.id);
+      invalidateSeoSummaryCache();
+      return { deleted };
     }),
     trash: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
       const entry = await getContentEntry(input.id);
@@ -161,6 +168,7 @@ export const cmsRouter = router({
       requireEntryOwnership(ctx.user, entry);
       const trashed = await trashContentEntry(input.id);
       if (!trashed) throw new Error("Content entry is already in the trash.");
+      invalidateSeoSummaryCache();
       return trashed;
     }),
     restore: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).mutation(async ({ ctx, input }) => {
@@ -169,6 +177,7 @@ export const cmsRouter = router({
       requireEntryOwnership(ctx.user, entry);
       const restored = await restoreContentEntry(input.id);
       if (!restored) throw new Error("Content entry is not in the trash.");
+      invalidateSeoSummaryCache();
       return restored;
     }),
   }),

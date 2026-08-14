@@ -35,7 +35,7 @@
 - [x] Add theme-level post/page template selection and verify template choice changes protected public preview rendering.
 - [ ] Audit and improve dynamic homepage, archive, category, tag, search, sitemap, and cache-invalidation flows after publication changes.
 - [x] Audit REST endpoints and document the WordPress-compatibility adapter’s supported users, individual resources, pagination, filtering, errors, writes, trash/delete behavior, plus intentional menu/settings administrative-resource non-support boundaries.
-- [ ] Add individual and aggregate SEO analysis with actionable checks, scalable cached/aggregated reporting, structured data, and crawler-visible metadata delivery.
+- [x] Add individual and aggregate SEO analysis with actionable checks, scalable cached/aggregated reporting, structured data, and crawler-visible metadata delivery.
 - [x] Review schema indexes, query patterns, N+1 risks, media pagination, sitemap chunking, and cache strategy for 50,000 posts and 500,000 media objects.
 - [ ] Complete security audit and harden authorization, media uploads, sanitization, token scopes, CSRF exposure, rate limiting, custom code, and plugin trust boundaries.
 - [x] Audit plugin lifecycle and security using the reading-time plugin as a removable integration test.
