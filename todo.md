@@ -32,7 +32,7 @@
 - [ ] Implement protected draft previews rendered through the real public theme for posts, pages, scheduled content, and templates.
 - [ ] Add visual and source/HTML authoring modes with allowed-HTML sanitization and documented content safety rules.
 - [ ] Separate page-specific hierarchy/templates from post-specific archives, taxonomy, author, related-content, and templates.
-- [ ] Add theme-level post/page template selection and verify template choice changes public rendering.
+- [x] Add theme-level post/page template selection and verify template choice changes protected public preview rendering.
 - [ ] Audit and improve dynamic homepage, archive, category, tag, search, sitemap, and cache-invalidation flows after publication changes.
 - [ ] Audit REST endpoints and build a documented WordPress-compatibility adapter for users, menus, settings, individual resources, pagination, filtering, errors, writes, and trash/delete behavior.
 - [ ] Add individual and aggregate SEO analysis with actionable checks, scalable cached/aggregated reporting, structured data, and crawler-visible metadata delivery.
