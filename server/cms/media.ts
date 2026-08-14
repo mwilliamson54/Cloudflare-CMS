@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { createMediaRecord } from "../db";
+import { createMediaRecord, getMediaRecord, updateMediaRecord } from "../db";
 import { s3CompatibleMediaStorage } from "./mediaStorage";
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -46,5 +46,38 @@ export async function persistMediaUpload(input: {
     altText: input.altText ?? null,
     title: input.title ?? null,
     uploadedById: input.uploadedById,
+  });
+}
+
+/** Replaces file bytes while preserving the media row ID used by content references. */
+export async function persistMediaReplacement(input: {
+  mediaId: number;
+  fileName: string;
+  mimeType: string;
+  dataBase64: string;
+  uploadedById: number;
+}) {
+  const existing = await getMediaRecord(input.mediaId);
+  if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Media record not found." });
+  if (!allowedMimeTypes.has(input.mimeType)) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Only JPEG, PNG, WebP, AVIF, GIF, and PDF files are supported." });
+  }
+  const bytes = Buffer.from(input.dataBase64, "base64");
+  if (!bytes.length || bytes.length > MAX_UPLOAD_BYTES) {
+    throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Files must be between 1 byte and 10 MB." });
+  }
+  const safeStem = input.fileName.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]/g, "-").replace(/-+/g, "-").slice(0, 160) || "upload";
+  const extension = extFor(input.mimeType);
+  if (!extension) throw new TRPCError({ code: "BAD_REQUEST", message: "Unsupported upload type." });
+  const fileName = `${safeStem}.${extension}`;
+  const stored = await s3CompatibleMediaStorage.put({ key: mediaKey(fileName, input.uploadedById), bytes, mimeType: input.mimeType });
+  return updateMediaRecord(input.mediaId, {
+    storageKey: stored.key,
+    storageProvider: stored.provider,
+    url: stored.url,
+    fileName,
+    originalFileName: input.fileName.slice(0, 255),
+    mimeType: input.mimeType,
+    sizeBytes: bytes.length,
   });
 }

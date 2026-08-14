@@ -414,9 +414,29 @@ export async function createMediaRecord(input: {
   return (await db.select().from(media).where(eq(media.id, Number(result[0].insertId))).limit(1))[0] ?? null;
 }
 
+export async function getMediaRecord(id: number) {
+  const db = await requireDb();
+  return (await db.select().from(media).where(eq(media.id, id)).limit(1))[0] ?? null;
+}
+
 export async function updateMediaRecord(
   id: number,
-  input: Partial<Pick<typeof media.$inferInsert, "altText" | "title" | "caption" | "description">>,
+  input: Partial<
+    Pick<
+      typeof media.$inferInsert,
+      | "storageKey"
+      | "storageProvider"
+      | "url"
+      | "fileName"
+      | "originalFileName"
+      | "mimeType"
+      | "sizeBytes"
+      | "altText"
+      | "title"
+      | "caption"
+      | "description"
+    >
+  >,
 ) {
   const db = await requireDb();
   await db.update(media).set(input).where(eq(media.id, id));

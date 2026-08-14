@@ -11,6 +11,7 @@ import {
   deleteCategory,
   deleteContentEntry,
   deleteMediaRecord,
+  getMediaRecord,
   deleteTag,
   getContentEntry,
   getUserById,
@@ -32,7 +33,7 @@ import {
 } from "../db";
 import { issueApiToken, sha256 } from "../cms/apiTokens";
 import { listEditorBlocks } from "../cms/blocks";
-import { persistMediaUpload } from "../cms/media";
+import { persistMediaReplacement, persistMediaUpload } from "../cms/media";
 import { requireCapability, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
 import { analyzeSeo } from "../cms/seoAnalysis";
 import { sanitizeRichHtml } from "../cms/sanitize";
@@ -171,6 +172,13 @@ export const cmsRouter = router({
     upload: procedureWithCapability("media:write")
       .input(z.object({ fileName: z.string().min(1).max(255), mimeType: z.string().max(128), dataBase64: z.string().min(1).max(15_000_000), altText: z.string().max(500).nullable().optional(), title: z.string().max(255).nullable().optional() }))
       .mutation(({ ctx, input }) => persistMediaUpload({ ...input, uploadedById: ctx.user.id })),
+    replace: procedureWithCapability("media:write")
+      .input(z.object({ id: z.number().int().positive(), fileName: z.string().min(1).max(255), mimeType: z.string().max(128), dataBase64: z.string().min(1).max(15_000_000) }))
+      .mutation(async ({ ctx, input }) => {
+        const record = await getMediaRecord(input.id);
+        if (!record) throw new Error("Media record not found.");
+        return persistMediaReplacement({ ...input, mediaId: input.id, uploadedById: ctx.user.id });
+      }),
     update: procedureWithCapability("media:write")
       .input(z.object({ id: z.number().int().positive(), values: z.object({ altText: z.string().max(500).nullable().optional(), title: z.string().max(255).nullable().optional(), caption: z.string().nullable().optional(), description: z.string().nullable().optional() }) }))
       .mutation(({ input }) => updateMediaRecord(input.id, input.values)),
