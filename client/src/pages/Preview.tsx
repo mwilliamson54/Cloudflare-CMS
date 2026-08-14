@@ -1,7 +1,7 @@
 import { FashionFooter, FashionHeader, Newsletter } from "@/components/FashionLayout";
 import { Seo } from "@/components/Seo";
 import { trpc } from "@/lib/trpc";
-import { fashionTheme } from "@/themes/fashion/defaults";
+import { fashionTheme } from "@/themes/fashion/runtime";
 import { ArrowLeft, Clock3 } from "lucide-react";
 import { Link, useParams } from "wouter";
 

@@ -1,4 +1,6 @@
-import { fashionTheme } from "./defaults";
+import { fallbackStories, fashionTheme } from "./defaults";
+
+export { fallbackStories, fashionTheme };
 
 export const BUNDLED_THEME_KEY = "fashion-editorial" as const;
 

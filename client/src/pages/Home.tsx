@@ -2,26 +2,27 @@ import { FashionFooter, FashionHeader, Newsletter } from "@/components/FashionLa
 import { Seo } from "@/components/Seo";
 import { StoryCard, type StoryCardData } from "@/components/StoryCard";
 import { trpc } from "@/lib/trpc";
-import { fallbackStories, fashionTheme } from "@/themes/fashion/defaults";
+import { fallbackStories, resolvePublicTheme } from "@/themes/fashion/runtime";
 import { ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 
 function normalizeSlug(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
-function mapStories(entries: any[]): StoryCardData[] {
+function mapStories(entries: any[], theme: ReturnType<typeof resolvePublicTheme>): StoryCardData[] {
   return entries.map((entry, index) => ({
     slug: entry.slug,
     title: entry.title,
     excerpt: entry.excerpt || "A considered perspective from the Atelier Journal editorial desk.",
     category: entry.categories?.[0]?.name || "Journal",
     date: entry.publishedAt ? new Date(entry.publishedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "New story",
-    image: entry.featuredMediaId ? fashionTheme.images.cardOne : [fashionTheme.images.hero, fashionTheme.images.cardOne, fashionTheme.images.cardTwo][index % 3],
+    image: entry.featuredMediaId ? theme.images.cardOne : [theme.images.hero, theme.images.cardOne, theme.images.cardTwo][index % 3],
   }));
 }
 
 export default function Home() {
   const posts = trpc.site.posts.useQuery({ perPage: 100 });
   const settings = trpc.site.settings.useQuery();
-  const stories = posts.data?.entries.length ? mapStories(posts.data.entries) : fallbackStories;
+  const theme = resolvePublicTheme(settings.data?.theme);
+  const stories = posts.data?.entries.length ? mapStories(posts.data.entries, theme) : fallbackStories;
   const hero = stories[0];
   const homepageCategories = Array.isArray(settings.data?.homepageCategorySlugs)
     ? settings.data.homepageCategorySlugs.filter((value): value is string => typeof value === "string")
@@ -31,7 +32,7 @@ export default function Home() {
     .filter(section => section.stories.length);
 
   return <>
-    <Seo title="Atelier Journal — Fashion, culture, considered living" description="An independent journal of fashion, culture, and considered living." canonicalPath="/" image={fashionTheme.images.hero} />
+    <Seo title="Atelier Journal — Fashion, culture, considered living" description="An independent journal of fashion, culture, and considered living." canonicalPath="/" image={theme.images.hero} />
     <FashionHeader />
     <main>
       <section className="border-b border-[#e9e2d8] bg-[#fbfaf7]">

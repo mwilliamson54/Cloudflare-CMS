@@ -2,7 +2,7 @@ import { FashionFooter, FashionHeader, Newsletter } from "@/components/FashionLa
 import { Seo } from "@/components/Seo";
 import { StoryCard, type StoryCardData } from "@/components/StoryCard";
 import { trpc } from "@/lib/trpc";
-import { fallbackStories, fashionTheme } from "@/themes/fashion/defaults";
+import { fallbackStories, fashionTheme } from "@/themes/fashion/runtime";
 import { ArrowLeft, Clock3, Search } from "lucide-react";
 import { Link, useLocation, useParams, useSearch } from "wouter";
 
