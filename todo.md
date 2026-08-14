@@ -51,3 +51,4 @@
 - [ ] Add administrator-only database-backed controls to inspect and activate the supported fashion theme and bundled plugins without changing CMS core files.
 - [x] Add administrator-only persisted activation controls for the bundled Reading Time plugin, including public-hook and editor-block gating.
 - [ ] Wire persisted theme selection into the public shell or explicitly constrain the system to a single immutable theme, with runtime integration tests.
+- [x] Add local WordPress REST contract tests for published visibility, search and pagination headers, unpublished single-resource denial, authenticated publication, and error shape.
