@@ -38,8 +38,8 @@ describe("WordPress REST adapter", () => {
     await expect(response.json()).resolves.toMatchObject([{ id: 5, status: "published", title: { rendered: "Published" } }]);
   });
 
-  it("does not expose an unpublished individual entry", async () => {
-    repository.getContentEntry.mockResolvedValue({ ...published, status: "draft" });
+  it.each(["draft", "scheduled", "archived"] as const)("does not expose an individual %s entry", async status => {
+    repository.getContentEntry.mockResolvedValue({ ...published, status });
     const response = await request("/api/wp/v2/posts/5");
     expect(response.status).toBe(404); await expect(response.json()).resolves.toMatchObject({ code: "rest_post_invalid_id", data: { status: 404 } });
   });

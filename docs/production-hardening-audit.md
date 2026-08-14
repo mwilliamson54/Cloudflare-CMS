@@ -58,6 +58,8 @@ Category archives now have the same explicit regression evidence: the route requ
 
 Public tag archives now use the equivalent `site.tagPosts` contract, request published posts before filtering tag relationships, and render at `/tag/:slug` through the fashion archive shell. The new route has regression coverage for the published-only query input and visual verification for its empty and populated-layout boundary.
 
+Lifecycle visibility coverage now explicitly includes scheduled and archived records. The local WordPress REST adapter returns the standard non-public resource response for draft, scheduled, and archived individual posts; the public individual-page contract likewise returns no entry for scheduled and archived page slugs. Together with the scheduler's guarded promotion statement and the published-only list queries, this establishes the intended progression: scheduled entries remain unavailable until promotion, published entries are readable, and archived entries return to private status. Database-backed D1 fixtures and custom-entry end-to-end scenarios remain tracked as the next integration layer.
+
 The Cloudflare scheduled worker now has direct regression coverage for its promotion statement. Each run issues one guarded D1 update that transitions only rows with `status = 'scheduled'`, a non-null due timestamp, and `scheduled_at <= now`; it sets the publication timestamp from the scheduled value. The public query contracts therefore keep scheduled records private until the idempotent promotion succeeds, after which homepage, archive, category, search, REST, and sitemap readers use their existing published-only filters.
 
 ## Query-Shape Scalability Increment
