@@ -8,7 +8,7 @@ const auth = vi.hoisted(() => ({ authenticateRestRequest: vi.fn() }));
 vi.mock("../db", async () => ({ ...(await vi.importActual<typeof import("../db")>("../db")), ...repository }));
 vi.mock("./restAuth", () => auth);
 
-import { registerWordPressRestRoutes } from "./wpRest";
+import { registerWordPressRestRoutes, resetDevelopmentRestRateLimit } from "./wpRest";
 
 let server: Server | undefined;
 const published = { id: 5, contentTypeId: 1, authorId: 9, title: "Published", slug: "published", excerpt: "A story", bodyMarkdown: "# Heading", bodyHtml: null, featuredMediaId: null, parentId: null, templateKey: "default", status: "published" as const, scheduledAt: null, publishedAt: new Date("2026-08-14T00:00:00.000Z"), archivedAt: null, trashedAt: null, seoTitle: null, seoDescription: null, focusKeyword: null, canonicalUrl: null, robotsIndex: true, robotsFollow: true, ogTitle: null, ogDescription: null, ogImageMediaId: null, fieldData: null, createdAt: new Date("2026-08-13T00:00:00.000Z"), updatedAt: new Date("2026-08-14T00:00:00.000Z"), categories: [], tags: [] };
@@ -23,6 +23,7 @@ async function request(path: string, init?: RequestInit) {
 describe("WordPress REST adapter", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetDevelopmentRestRateLimit();
     repository.listContentEntries.mockResolvedValue({ entries: [published], total: 23 });
     repository.getContentEntry.mockResolvedValue(published); repository.getContentEntryBySlug.mockResolvedValue(published);
     repository.getUserById.mockResolvedValue({ id: 9, name: "Editorial Author", email: "private@example.com", role: "author", createdAt: new Date("2026-08-14T00:00:00.000Z") }); repository.listUsers.mockResolvedValue([{ id: 9, name: "Editorial Author", email: "private@example.com", role: "author", createdAt: new Date("2026-08-14T00:00:00.000Z") }, { id: 10, name: "Guest Writer", email: "guest@example.com", role: "author", createdAt: new Date("2026-08-14T00:00:00.000Z") }]);
@@ -37,6 +38,19 @@ describe("WordPress REST adapter", () => {
     expect(response.status).toBe(200); expect(response.headers.get("x-wp-total")).toBe("23"); expect(response.headers.get("x-wp-totalpages")).toBe("3");
     expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "post", publishedOnly: true, query: "tailoring", page: 2, perPage: 10 });
     await expect(response.json()).resolves.toMatchObject([{ id: 5, status: "published", title: { rendered: "Published" } }]);
+  });
+
+  it("returns rate-limit headers and rejects the request beyond the bounded development window", async () => {
+    const app = express(); app.use(express.json()); registerWordPressRestRoutes(app);
+    server = await new Promise<Server>(resolve => { const instance = app.listen(0, () => resolve(instance)); });
+    const address = server.address(); if (!address || typeof address === "string") throw new Error("Expected TCP test server.");
+    const url = `http://127.0.0.1:${address.port}/api/wp/v2/posts`;
+    let last: Response | undefined;
+    for (let index = 0; index <= 120; index += 1) last = await fetch(url);
+    expect(last?.status).toBe(429);
+    expect(last?.headers.get("x-ratelimit-limit")).toBe("120");
+    expect(last?.headers.get("x-ratelimit-remaining")).toBe("0");
+    await expect(last?.json()).resolves.toMatchObject({ code: "rest_rate_limited", data: { status: 429 } });
   });
 
   it("returns published page collections through the page content-type contract", async () => {

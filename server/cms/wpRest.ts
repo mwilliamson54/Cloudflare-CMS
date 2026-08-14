@@ -27,6 +27,11 @@ const restWindows = new Map<string, { count: number; resetAt: number }>();
 const REST_WINDOW_MS = 60_000;
 const REST_MAX_REQUESTS = 120;
 
+/** Test-only reset point; production state remains process-local and window-bounded. */
+export function resetDevelopmentRestRateLimit() {
+  restWindows.clear();
+}
+
 function developmentRestRateLimit(req: Request, res: Response, next: () => void) {
   const key = req.ip || req.header("x-forwarded-for") || "unknown";
   const now = Date.now();
