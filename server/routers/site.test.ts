@@ -21,6 +21,13 @@ describe("public content lifecycle visibility", () => {
     expect(repository.getContentEntryBySlug).toHaveBeenCalledWith("post", "scheduled-story");
   });
 
+  it("uses the published-only page lookup for a public page slug", async () => {
+    repository.getContentEntryBySlug.mockResolvedValue(null);
+
+    await expect(siteRouter.createCaller({} as any).page({ slug: "studio" })).resolves.toBeNull();
+    expect(repository.getContentEntryBySlug).toHaveBeenCalledWith("page", "studio");
+  });
+
   it("uses the same published-only contract for category archives", async () => {
     repository.listContentEntries.mockResolvedValue({ entries: [{ id: 11, categories: [{ slug: "fashion" }] }], total: 1 });
 

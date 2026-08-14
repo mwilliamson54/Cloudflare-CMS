@@ -24,6 +24,10 @@ export const siteRouter = router({
     await bootstrapCms();
     return listContentEntries({ contentTypeKey: "page", publishedOnly: true, perPage: 100 });
   }),
+  page: publicProcedure.input(z.object({ slug: z.string().min(1).max(320) })).query(async ({ input }) => {
+    await bootstrapCms();
+    return getContentEntryBySlug("page", input.slug);
+  }),
   categories: publicProcedure.query(listCategories),
   tags: publicProcedure.query(listTags),
   settings: publicProcedure.query(async () => {

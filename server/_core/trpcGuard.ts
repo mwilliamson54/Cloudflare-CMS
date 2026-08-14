@@ -10,7 +10,8 @@ export function trpcRequestGuard(req: Request, res: Response, next: NextFunction
     return;
   }
   const cookies = parseCookieHeader(req.headers.cookie ?? "");
-  if (cookies[COOKIE_NAME] && !hasValidCsrfToken(cookies[CSRF_COOKIE_NAME], req.get(CSRF_HEADER_NAME))) {
+  const isStateChangingRequest = !["GET", "HEAD", "OPTIONS"].includes(req.method);
+  if (isStateChangingRequest && cookies[COOKIE_NAME] && !hasValidCsrfToken(cookies[CSRF_COOKIE_NAME], req.get(CSRF_HEADER_NAME))) {
     res.status(403).json({ error: "Missing or invalid CSRF token." });
     return;
   }

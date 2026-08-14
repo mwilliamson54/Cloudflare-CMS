@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Admin from "./pages/Admin";
 import { Article, BlogArchive, CategoryArchive, SearchResults, TagArchive } from "./pages/Blog";
+import { Page } from "./pages/Page";
 import { PreviewArticle } from "./pages/Preview";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"/admin/:rest*"} component={Admin} />
       <Route path={"/admin"} component={Admin} />
       <Route path={"/preview/:id"} component={PreviewArticle} />
+      <Route path={"/page/:slug"} component={Page} />
       <Route path={"/blog/:slug"} component={Article} />
       <Route path={"/blog"} component={BlogArchive} />
       <Route path={"/category/:slug"} component={CategoryArchive} />
