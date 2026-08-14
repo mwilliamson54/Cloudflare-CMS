@@ -1,18 +1,18 @@
 # Production-Hardening Audit
 
-**Status:** Initial implementation audit, 14 August 2026
+**Status:** Rolling implementation audit, 14 August 2026
 
 This audit records the state of the existing CMS before hardening changes. The existing application is being extended incrementally; working routes, data models, and the fashion theme are preserved.
 
 | Area | Current state | Assessment |
 | --- | --- | --- |
-| Roles | `admin`, `editor`, and `viewer` are enforced by a centralized capability map. | **Partial.** WordPress-style author, contributor, and subscriber levels plus user administration are absent. |
-| Content | Posts, pages, custom types, lifecycle statuses, taxonomies, API tokens, and content-level SEO fields are persisted. | **Partial.** Ownership restrictions, page hierarchy, templates, preview URLs, and structured visual/source editing need hardening. |
-| Media | The development adapter uploads bytes through a server-side S3-compatible presigned storage helper; metadata is persisted in `media`. | **Partial.** This is not a local-file or database-binary design. The Cloudflare adapter has an R2 binding and serves `functions/media/[[key]].ts`, but the upload path still needs to target R2 directly in production. |
-| R2 delivery | The Pages Function obtains a key from the `CMS_MEDIA` R2 binding and returns object data with immutable cache headers. | **Present for reads.** The production upload adapter, safer key architecture, validation, and thumbnail strategy still need completion. |
-| REST API | Collections for posts, pages, media, categories, and tags exist under `/api/wp/v2/*`; JWT API tokens are hashed and revocable. | **Partial.** Resource endpoints, users, menus, settings, WordPress response compatibility, pagination/filter coverage, and contract tests require expansion. |
-| Frontend | The fashion magazine uses published-content queries with archive, category, search, and article routes. | **Partial.** Preview rendering, template selection, crawler-visible metadata, cache invalidation, and related-content handling need verification. |
-| SEO | CMS fields, client metadata helper, sitemap and robots routes exist. | **Partial.** Per-entry Open Graph delivery, structured data, crawler-visible rendering, analysis/recommendations, and test coverage are outstanding. |
+| Roles | `admin`, `editor`, `author`, `contributor`, `subscriber`, and `viewer` are enforced through a centralized capability map. | **Implemented with ongoing coverage expansion.** Administrator user management and self-demotion protections are in place. |
+| Content | Posts, pages, custom types, lifecycle statuses, taxonomies, API tokens, page hierarchy, templates, protected previews, deletion, and content-level SEO fields are persisted. | **Implemented with further lifecycle and procedure-level regression coverage pending.** |
+| Media | The development adapter uploads bytes through a server-side S3-compatible presigned storage helper; metadata is persisted in `media`. | **Implemented.** The library validates uploads, supports metadata editing and stable-ID replacement, and never stores binary data in the database. |
+| R2 delivery | The Pages Function writes and reads objects through the `CMS_MEDIA` R2 binding and serves immutable cache headers. | **Implemented for upload, read, and authenticated stable-ID replacement.** Thumbnail derivatives remain a scalability enhancement. |
+| REST API | Collections for posts, pages, media, categories, and tags exist under `/api/wp/v2/*`; JWT API tokens are hashed and revocable. | **Implemented baseline.** Individual resource routes, authenticated PATCH updates including media replacement, pagination headers, errors, and rate limiting are present; broader contract tests remain. |
+| Frontend | The fashion magazine uses published-content queries with archive, category, search, article, and protected preview routes. | **Implemented with ongoing cache-flow verification.** |
+| SEO | CMS fields, client metadata helper, sitemap and robots routes exist. | **Implemented baseline.** Canonical, robots, JSON-LD, site-wide indexing, and per-entry Open Graph title/description overrides are wired; crawler-visible server rendering and additional test coverage remain. |
 | Plugins | A hook registry, documentation, and a reading-time plugin exist. | **Partial.** Lifecycle permissions, trusted-plugin policy, and removal testing must be documented and verified. |
 | Cloudflare | Pages Functions, D1 migration, R2 media route, KV declaration, and a scheduled Worker configuration exist. | **Partial.** The local Express adapter is not a deployment target; final audit must confirm Worker compatibility and free-plan operating limits. |
 
