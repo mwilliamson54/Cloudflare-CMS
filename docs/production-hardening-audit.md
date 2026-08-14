@@ -56,6 +56,12 @@ The public site router now has complementary visibility coverage: public post li
 
 Paginated content listings no longer hydrate categories and tags with two additional queries per entry. The repository now retrieves all category relationships and all tag relationships for the current page in two batched relation queries, groups them by entry ID, and preserves the existing entry contract. Consequently, a page of up to 100 entries has a bounded taxonomy-query shape rather than scaling linearly with the number of rows. Existing composite content-status/publication indexes, unique type-and-slug lookup, media creation ordering, and sitemap URL cap remain in place; full-text search and keyset pagination are retained as future scale-stage work.
 
+## Security Boundary Review
+
+CMS mutations use the authenticated application session for the administration interface and JWT bearer tokens with scope/capability validation for the WordPress-compatible REST API. The plugin model remains repository-only and allowlisted: no marketplace, runtime package upload, custom executable-code setting, or server-side plugin uploader is available. Visual and HTML-source authoring are content channels only; submitted HTML is allowlist-sanitized before persistence and source previews are sandboxed.
+
+The protected tRPC mutation path relies on the application OAuth session boundary. As a production deployment requirement, the hosting origin must remain same-site and HTTPS-only, and any future cross-origin administration integration must add an explicit origin/CSRF-token middleware before enabling cookie-authenticated mutations. No custom head/body/CSS/JS execution settings are exposed in the current administration UI; this is intentional until a separately reviewed trust model and CSP strategy are implemented.
+
 ## Structured Markdown Authoring
 
 The Markdown mode now treats the article body as an ordered sequence of portable Markdown blocks. Editors can insert registered core or enabled-plugin blocks, edit each block independently, move it up or down, and remove it without hand-managing separator syntax. The persisted format remains ordinary Markdown separated by blank lines, so REST responses, previews, extensions, and export paths retain a stable text contract. Visual and source-HTML modes remain available; source-mode previews stay sandboxed and all supplied HTML continues to pass through the server-side allowlist sanitizer before persistence.
