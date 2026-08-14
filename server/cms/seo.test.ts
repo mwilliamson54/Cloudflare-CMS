@@ -57,6 +57,15 @@ describe("local sitemap visibility", () => {
     expect(repository.listContentEntries).toHaveBeenCalledWith(expect.objectContaining({ contentTypeKey: "page", publishedOnly: true }));
   });
 
+  it("keeps noindex public content out of the sitemap while retaining indexed publication URLs", async () => {
+    const response = await request("/sitemap.xml");
+    const xml = await response.text();
+
+    expect(xml).toContain("/blog/indexed-story");
+    expect(xml).not.toContain("/blog/private-story");
+    expect(response.headers.get("content-type")).toContain("application/xml");
+  });
+
   it("returns an empty sitemap and avoids content queries when site-wide indexing is disabled", async () => {
     repository.getSettings.mockResolvedValue({ siteIndexing: false });
     const response = await request("/sitemap.xml");
