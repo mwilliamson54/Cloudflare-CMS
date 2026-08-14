@@ -38,6 +38,7 @@ import { listEditorBlocks } from "../cms/blocks";
 import { persistMediaReplacement, persistMediaUpload } from "../cms/media";
 import { requireCapability, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
 import { analyzeSeo } from "../cms/seoAnalysis";
+import { summarizeSeo } from "../cms/seoSummary";
 import { sanitizeRichHtml } from "../cms/sanitize";
 import { protectedProcedure, router } from "../_core/trpc";
 import "../../plugins/registry";
@@ -106,6 +107,10 @@ export const cmsRouter = router({
       if (!entry) throw new Error("Content entry not found.");
       requireEntryOwnership(ctx.user, entry);
       return analyzeSeo({ title: entry.title, description: entry.seoDescription || entry.excerpt, focusKeyword: entry.focusKeyword, bodyMarkdown: entry.bodyMarkdown, featuredMediaId: entry.featuredMediaId, canonicalUrl: entry.canonicalUrl, robotsIndex: entry.robotsIndex });
+    }),
+    summary: procedureWithCapability("site:manage").input(z.object({ limit: z.number().int().min(1).max(100).default(50) }).optional()).query(async ({ input }) => {
+      const result = await listContentEntries({ contentTypeKey: "post", perPage: input?.limit ?? 50 });
+      return summarizeSeo(result.entries);
     }),
   }),
   contentTypes: router({
