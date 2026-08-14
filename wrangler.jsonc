@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "atelier-cms",
+  "compatibility_date": "2026-08-14",
+  "pages_build_output_dir": "client/dist",
+  "d1_databases": [
+    {
+      "binding": "CMS_DB",
+      "database_name": "atelier-cms",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CMS_MEDIA",
+      "bucket_name": "atelier-cms-media"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CMS_CACHE",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+    }
+  ],
+  "vars": {
+    "CMS_ORIGIN": "https://example.com",
+    "CMS_TOKEN_TTL_SECONDS": "2592000"
+  }
+}

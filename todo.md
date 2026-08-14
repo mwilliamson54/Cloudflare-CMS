@@ -1,0 +1,25 @@
+# Project TODO
+
+- [x] Define a Cloudflare Pages Functions, D1, R2, and KV-compatible deployment architecture with a local full-stack adapter.
+- [x] Model CMS data for users, roles, API tokens, content types, posts, pages, custom entries, taxonomies, media, settings, menus, themes, and plugins.
+- [x] Implement role-based access control with the exact roles: admin, editor, and viewer.
+- [x] Implement secure JWT-backed REST API token issuance, revocation, validation, hashing, and audit metadata.
+- [x] Create WordPress-compatible REST endpoints at `/api/wp/v2/posts`, `/api/wp/v2/pages`, `/api/wp/v2/media`, `/api/wp/v2/categories`, and `/api/wp/v2/tags`.
+- [ ] Implement post, page, and custom-content CRUD with flexible field definitions and lifecycle statuses: draft, scheduled, published, and archived.
+- [x] Implement scheduled publishing with Cloudflare-compatible, idempotent processing.
+- [x] Build category and tag management, including hierarchical category support.
+- [ ] Build a rich Markdown editor with a secure live preview and extensible block model.
+- [ ] Build an S3-compatible media-library workflow with upload, browse, metadata, replace, search, and delete-reference actions.
+- [ ] Build a premium admin dashboard using the provided dashboard layout, with complete content, taxonomies, media, tokens, SEO, menus, settings, themes, plugins, and system areas.
+- [x] Build a polished, responsive fashion-magazine frontend with hero, configurable category sections, article cards, article detail views, and search.
+- [ ] Implement SEO metadata, canonical URLs, Open Graph cards, robots controls, dynamic sitemap.xml, and robots.txt.
+- [ ] Implement CMS configuration for header, footer, menus, theme settings, plugins, custom code, and site-wide index controls.
+- [x] Add a documented extension model for themes, content blocks, and plugins.
+- [x] Add Cloudflare Pages Functions, D1, R2, and KV deployment configuration and environment-variable documentation.
+- [ ] Write and run automated tests for authorization, JWT tokens, workflow rules, REST endpoints, content visibility, sitemap, and SEO behavior.
+- [x] Verify public and administrative views across desktop and mobile layouts, resolve visual or runtime issues, and document deployment steps.
+- [ ] Enforce role capability checks across all CMS mutation procedures and verify each role boundary with automated tests.
+- [x] Complete the end-to-end REST token lifecycle: issuance, hashed persistence, database-backed revocation validation, usage metadata, and management UI.
+- [ ] Complete custom-content editing, media replacement/search metadata, SEO controls, menus, header/footer, theme/plugin controls, and controlled custom-code settings in the administration UI.
+- [ ] Add end-to-end integration tests for REST publication, content visibility, sitemap inclusion, and noindex behavior.
+- [ ] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.

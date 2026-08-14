@@ -1,0 +1,186 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import DashboardLayout from "@/components/DashboardLayout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { trpc } from "@/lib/trpc";
+import { BookOpenText, Check, Copy, FilePlus2, ImagePlus, KeyRound, LayoutDashboard, Loader2, Pencil, Plus, Search, Settings2, Tags, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Streamdown } from "streamdown";
+import { Link, useLocation } from "wouter";
+import { toast } from "sonner";
+
+type ContentKind = string;
+type Status = "draft" | "scheduled" | "published" | "archived";
+
+function titleFor(path: string) {
+  if (path.includes("/posts")) return "Posts";
+  if (path.includes("/pages")) return "Pages";
+  if (path.includes("/types")) return "Content types";
+  if (path.includes("/media")) return "Media library";
+  if (path.includes("/taxonomy")) return "Taxonomies";
+  if (path.includes("/tokens")) return "API tokens";
+  if (path.includes("/settings")) return "Settings";
+  return "Overview";
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function StatusBadge({ status }: { status: Status }) {
+  const classes: Record<Status, string> = {
+    draft: "bg-stone-100 text-stone-700 border-stone-200",
+    scheduled: "bg-amber-50 text-amber-800 border-amber-200",
+    published: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    archived: "bg-slate-100 text-slate-700 border-slate-200",
+  };
+  return <Badge variant="outline" className={`${classes[status]} capitalize font-medium`}>{status}</Badge>;
+}
+
+function Metric({ label, value, hint, icon: Icon }: { label: string; value: number | string; hint: string; icon: typeof BookOpenText }) {
+  return (
+    <section className="rounded-2xl border border-[#e7dfd3] bg-white p-5 shadow-[0_2px_12px_rgba(80,57,32,0.035)]">
+      <div className="mb-5 flex items-start justify-between">
+        <p className="text-sm font-medium text-stone-500">{label}</p>
+        <div className="rounded-xl bg-[#f4efe6] p-2.5 text-[#5d4130]"><Icon className="h-4 w-4" /></div>
+      </div>
+      <p className="font-serif text-3xl tracking-tight text-[#30221a]">{value}</p>
+      <p className="mt-2 text-xs text-stone-500">{hint}</p>
+    </section>
+  );
+}
+
+function ContentEditor({ type, entry, onDone }: { type: ContentKind; entry?: any; onDone: () => void }) {
+  const [title, setTitle] = useState(entry?.title ?? "");
+  const [slug, setSlug] = useState(entry?.slug ?? "");
+  const [excerpt, setExcerpt] = useState(entry?.excerpt ?? "");
+  const [body, setBody] = useState(entry?.bodyMarkdown ?? "# Start writing\n\nCreate a considered editorial story with **Markdown** support.");
+  const [status, setStatus] = useState<Status>(entry?.status ?? "draft");
+  const [scheduledAt, setScheduledAt] = useState(entry?.scheduledAt ? new Date(entry.scheduledAt).toISOString().slice(0, 16) : "");
+  const [seoTitle, setSeoTitle] = useState(entry?.seoTitle ?? ""); const [seoDescription, setSeoDescription] = useState(entry?.seoDescription ?? ""); const [canonicalUrl, setCanonicalUrl] = useState(entry?.canonicalUrl ?? ""); const [robotsIndex, setRobotsIndex] = useState(entry?.robotsIndex !== false); const [robotsFollow, setRobotsFollow] = useState(entry?.robotsFollow !== false);
+  const [preview, setPreview] = useState(false);
+  const create = trpc.cms.content.create.useMutation({
+    onSuccess: () => { toast.success(`${type === "post" ? "Post" : "Page"} saved.`); onDone(); },
+    onError: error => toast.error(error.message),
+  });
+  const update = trpc.cms.content.update.useMutation({ onSuccess: () => { toast.success(`${type === "post" ? "Post" : "Page"} updated.`); onDone(); }, onError: error => toast.error(error.message) });
+
+  function submit() {
+    const preparedSlug = slug || slugify(title);
+    if (!title || !preparedSlug) { toast.error("A title and URL slug are required."); return; }
+    if (status === "scheduled" && !scheduledAt) { toast.error("Choose a future date and time for scheduled content."); return; }
+    const values = {
+      contentTypeKey: type,
+      title,
+      slug: preparedSlug,
+      excerpt: excerpt || null,
+      bodyMarkdown: body,
+      status,
+      scheduledAt: status === "scheduled" ? new Date(scheduledAt) : null,
+      seoTitle: seoTitle || null,
+      seoDescription: seoDescription || null,
+      canonicalUrl: canonicalUrl || null,
+      robotsIndex,
+      robotsFollow,
+    };
+    if (entry) update.mutate({ id: entry.id, values }); else create.mutate(values);
+  }
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="rounded-2xl border border-[#e7dfd3] bg-white p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">{entry ? "Editing" : "New"} {type}</p><h2 className="mt-1 font-serif text-2xl text-[#30221a]">Compose with intent</h2></div>
+          <Button variant="ghost" size="sm" onClick={() => setPreview(value => !value)}>{preview ? "Editor" : "Live preview"}</Button>
+        </div>
+        {preview ? (
+          <article className="prose prose-stone mt-8 max-w-none"><h1>{title || "Untitled story"}</h1><p className="lead">{excerpt}</p><Streamdown>{body}</Streamdown></article>
+        ) : (
+          <div className="mt-7 space-y-5">
+            <div><Label htmlFor="entry-title">Title</Label><Input id="entry-title" value={title} onChange={event => { setTitle(event.target.value); if (!slug) setSlug(slugify(event.target.value)); }} placeholder="The shape of a new season" className="mt-2 h-11" /></div>
+            <div><Label htmlFor="entry-slug">URL slug</Label><Input id="entry-slug" value={slug} onChange={event => setSlug(slugify(event.target.value))} placeholder="the-shape-of-a-new-season" className="mt-2" /></div>
+            <div><Label htmlFor="entry-excerpt">Excerpt</Label><Textarea id="entry-excerpt" value={excerpt} onChange={event => setExcerpt(event.target.value)} placeholder="A concise editorial introduction for cards and social sharing." className="mt-2 min-h-22" /></div>
+            <div><Label htmlFor="entry-body">Markdown content</Label><div className="mt-2 flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" onClick={() => setBody((value: string) => `${value}\n\n## New heading\n\n`)}>Heading</Button><Button type="button" variant="outline" size="sm" onClick={() => setBody((value: string) => `${value}\n\n> A detail worth holding onto.\n\n`)}>Quote</Button><Button type="button" variant="outline" size="sm" onClick={() => setBody((value: string) => `${value}\n\n![Describe the image](https://)\n\n`)}>Image</Button><Button type="button" variant="outline" size="sm" onClick={() => setBody((value: string) => `${value}\n\n---\n\n`)}>Divider</Button></div><Textarea id="entry-body" value={body} onChange={event => setBody(event.target.value)} className="mt-2 min-h-80 font-mono text-sm leading-6" /></div>
+          </div>
+        )}
+      </div>
+      <aside className="space-y-4"><div className="rounded-2xl border border-[#e7dfd3] bg-white p-5"><p className="text-sm font-semibold text-[#30221a]">Publication</p><div className="mt-4 space-y-4"><div><Label>Status</Label><Select value={status} onValueChange={value => setStatus(value as Status)}><SelectTrigger className="mt-2"><SelectValue /></SelectTrigger><SelectContent>{(["draft", "scheduled", "published", "archived"] as Status[]).map(item => <SelectItem value={item} key={item} className="capitalize">{item}</SelectItem>)}</SelectContent></Select></div>{status === "scheduled" && <div><Label>Publish at</Label><Input type="datetime-local" value={scheduledAt} onChange={event => setScheduledAt(event.target.value)} className="mt-2" /></div>}<Button className="w-full" onClick={submit} disabled={create.isPending || update.isPending}>{(create.isPending || update.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{entry ? "Update" : "Save"} {status}</Button></div></div><div className="rounded-2xl border border-[#e7dfd3] bg-white p-5"><p className="text-sm font-semibold text-[#30221a]">Search appearance</p><div className="mt-4 space-y-3"><div><Label>SEO title</Label><Input className="mt-2" value={seoTitle} onChange={event => setSeoTitle(event.target.value)} placeholder={title || "Search title"} /></div><div><Label>Meta description</Label><Textarea className="mt-2 min-h-20" value={seoDescription} onChange={event => setSeoDescription(event.target.value)} placeholder="A concise description for search and sharing." /></div><div><Label>Canonical URL</Label><Input type="url" className="mt-2" value={canonicalUrl} onChange={event => setCanonicalUrl(event.target.value)} placeholder="https://example.com/story" /></div><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={robotsIndex} onChange={event => setRobotsIndex(event.target.checked)} /> Allow indexing</label><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={robotsFollow} onChange={event => setRobotsFollow(event.target.checked)} /> Allow link following</label></div></div><div className="rounded-2xl border border-[#eadfce] bg-[#fbf7f0] p-5 text-sm leading-6 text-stone-600">The editor stores source Markdown and renders a safe preview. Publication status controls public visibility.</div></aside>
+    </div>
+  );
+}
+
+function ContentTable({ type }: { type: ContentKind }) {
+  const [query, setQuery] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const result = trpc.cms.content.list.useQuery({ contentTypeKey: type, query: query || undefined, perPage: 30 });
+  const utils = trpc.useUtils();
+  if (creating || editing) return <ContentEditor type={type} entry={editing || undefined} onDone={() => { utils.cms.content.list.invalidate(); setCreating(false); setEditing(null); }} />;
+  return <section><div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Editorial desk</p><h1 className="mt-1 font-serif text-4xl tracking-tight text-[#30221a]">{type === "post" ? "Stories" : type === "page" ? "Pages" : type.replace(/[-_]/g, " ")}</h1></div><Button onClick={() => setCreating(true)}><Plus className="mr-2 h-4 w-4" />New {type}</Button></div><div className="overflow-hidden rounded-2xl border border-[#e7dfd3] bg-white"><div className="border-b border-[#eee7dc] p-4"><div className="relative max-w-sm"><Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" /><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search by title or excerpt" className="pl-9" /></div></div>{result.isLoading ? <div className="p-12 text-center text-sm text-stone-500">Loading {type}s…</div> : result.data?.entries.length ? <div className="divide-y divide-[#eee7dc]">{result.data.entries.map(entry => <div className="flex items-center gap-4 p-4" key={entry.id}><button onClick={() => setEditing(entry)} className="min-w-0 flex-1 text-left"><p className="truncate font-medium text-[#30221a]">{entry.title}</p><p className="mt-1 truncate text-xs text-stone-500">/{entry.slug} · Updated {new Date(entry.updatedAt).toLocaleDateString()}</p></button><StatusBadge status={entry.status} /><Button variant="ghost" size="icon" onClick={() => setEditing(entry)} aria-label={`Edit ${entry.title}`}><Pencil className="h-4 w-4" /></Button></div>)}</div> : <div className="p-14 text-center"><FilePlus2 className="mx-auto h-6 w-6 text-stone-300" /><p className="mt-3 font-medium text-[#453229]">No {type}s yet</p><p className="mt-1 text-sm text-stone-500">Create the first piece from this workspace.</p></div>}</div></section>;
+}
+
+function ContentTypesPanel() {
+  const [key, setKey] = useState(""); const [label, setLabel] = useState(""); const types = trpc.cms.contentTypes.list.useQuery(); const utils = trpc.useUtils();
+  const create = trpc.cms.contentTypes.create.useMutation({ onSuccess: () => { setKey(""); setLabel(""); utils.cms.contentTypes.list.invalidate(); toast.success("Content type created."); }, onError: error => toast.error(error.message) });
+  return <section><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Structured publishing</p><h1 className="mt-1 font-serif text-4xl text-[#30221a]">Content types</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">Add a reusable content model. Each custom type begins with title and body fields and can use the CMS status, taxonomy, media, and SEO fields.</p><div className="mt-6 grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]"><div className="rounded-2xl border border-[#e7dfd3] bg-white p-6"><p className="font-semibold text-[#30221a]">Create a type</p><div className="mt-5 space-y-4"><div><Label>Plural label</Label><Input className="mt-2" value={label} onChange={event => { setLabel(event.target.value); if (!key) setKey(slugify(event.target.value)); }} placeholder="Lookbooks" /></div><div><Label>Machine key</Label><Input className="mt-2" value={key} onChange={event => setKey(slugify(event.target.value))} placeholder="lookbooks" /></div><Button className="w-full" onClick={() => key && label && create.mutate({ key, label, fieldDefinitions: [{ key: "title", label: "Title", type: "text", required: true }, { key: "body", label: "Body", type: "textarea" }] })} disabled={create.isPending}>Create content type</Button></div></div><div className="overflow-hidden rounded-2xl border border-[#e7dfd3] bg-white"><div className="divide-y divide-[#eee7dc]">{types.data?.map(type => <div key={type.id} className="flex items-center gap-4 p-5"><div className="min-w-0 flex-1"><p className="font-medium capitalize text-[#30221a]">{type.label}</p><p className="mt-1 text-xs text-stone-500">{type.key} · {type.kind} · {type.fieldDefinitions.length} core fields</p></div>{type.kind === "custom" ? <Link href={`/admin/types/${type.key}`} className="text-xs font-semibold uppercase tracking-[0.14em] text-[#70513d]">Manage entries</Link> : <Badge variant="secondary">System</Badge>}</div>)}</div></div></div></section>;
+}
+
+function TaxonomyPanel() {
+  const [categoryName, setCategoryName] = useState(""); const [categoryParent, setCategoryParent] = useState("root"); const [tagName, setTagName] = useState("");
+  const categories = trpc.cms.categories.list.useQuery(); const tags = trpc.cms.tags.list.useQuery(); const utils = trpc.useUtils();
+  const refresh = () => { utils.cms.categories.list.invalidate(); utils.cms.tags.list.invalidate(); };
+  const createCategory = trpc.cms.categories.create.useMutation({ onSuccess: () => { setCategoryName(""); setCategoryParent("root"); refresh(); toast.success("Category added."); }, onError: error => toast.error(error.message) });
+  const updateCategory = trpc.cms.categories.update.useMutation({ onSuccess: () => { refresh(); toast.success("Category updated."); }, onError: error => toast.error(error.message) });
+  const removeCategory = trpc.cms.categories.delete.useMutation({ onSuccess: () => { refresh(); toast.success("Category deleted. Child categories are now top-level."); }, onError: error => toast.error(error.message) });
+  const createTag = trpc.cms.tags.create.useMutation({ onSuccess: () => { setTagName(""); refresh(); toast.success("Tag added."); }, onError: error => toast.error(error.message) });
+  const updateTag = trpc.cms.tags.update.useMutation({ onSuccess: () => { refresh(); toast.success("Tag updated."); }, onError: error => toast.error(error.message) });
+  const removeTag = trpc.cms.tags.delete.useMutation({ onSuccess: () => { refresh(); toast.success("Tag deleted."); }, onError: error => toast.error(error.message) });
+  function editCategory(category: { id: number; name: string; parentId: number | null }) { const name = window.prompt("Category name", category.name); if (!name?.trim()) return; const parent = window.prompt("Parent category ID (leave blank for top level)", category.parentId ? String(category.parentId) : ""); const parentId = parent?.trim() ? Number(parent) : null; if (parentId === category.id) return toast.error("A category cannot be its own parent."); updateCategory.mutate({ id: category.id, values: { name: name.trim(), slug: slugify(name), parentId: Number.isInteger(parentId) && parentId! > 0 ? parentId : null } }); }
+  function editTag(tag: { id: number; name: string }) { const name = window.prompt("Tag name", tag.name); if (name?.trim()) updateTag.mutate({ id: tag.id, values: { name: name.trim(), slug: slugify(name) } }); }
+  return <section><div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Information architecture</p><h1 className="mt-1 font-serif text-4xl text-[#30221a]">Taxonomies</h1></div><div className="grid gap-5 lg:grid-cols-2"><div className="rounded-2xl border border-[#e7dfd3] bg-white p-6"><h2 className="font-serif text-2xl text-[#30221a]">Categories</h2><p className="mt-1 text-sm text-stone-500">Create nested editorial topics and reparent them as the publication grows.</p><div className="mt-5 grid gap-2 sm:grid-cols-[1fr_180px_auto]"><Input value={categoryName} onChange={event => setCategoryName(event.target.value)} placeholder="e.g. Street style" /><Select value={categoryParent} onValueChange={setCategoryParent}><SelectTrigger><SelectValue placeholder="Top level" /></SelectTrigger><SelectContent><SelectItem value="root">Top level</SelectItem>{categories.data?.map(category => <SelectItem value={String(category.id)} key={category.id}>{category.name}</SelectItem>)}</SelectContent></Select><Button onClick={() => categoryName && createCategory.mutate({ name: categoryName, slug: slugify(categoryName), parentId: categoryParent === "root" ? null : Number(categoryParent) })}>Add</Button></div><div className="mt-5 divide-y divide-[#eee7dc]">{categories.data?.map(category => <div key={category.id} className="flex items-center gap-3 py-3"><Tags className="h-4 w-4 text-[#946b4f]" /><div className="min-w-0 flex-1"><p className="font-medium text-[#30221a]">{category.parentId ? "↳ " : ""}{category.name}</p><p className="text-xs text-stone-500">/{category.slug}{category.parentId ? ` · parent #${category.parentId}` : " · top level"}</p></div><Button variant="ghost" size="icon" onClick={() => editCategory(category)} aria-label={`Edit ${category.name}`}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => window.confirm(`Delete ${category.name}?`) && removeCategory.mutate({ id: category.id })} aria-label={`Delete ${category.name}`}><Trash2 className="h-3.5 w-3.5" /></Button></div>)}</div></div><div className="rounded-2xl border border-[#e7dfd3] bg-white p-6"><h2 className="font-serif text-2xl text-[#30221a]">Tags</h2><p className="mt-1 text-sm text-stone-500">Add descriptive details that travel across stories.</p><div className="mt-5 flex gap-2"><Input value={tagName} onChange={event => setTagName(event.target.value)} placeholder="e.g. Tailoring" /><Button onClick={() => tagName && createTag.mutate({ name: tagName, slug: slugify(tagName) })}>Add</Button></div><div className="mt-5 divide-y divide-[#eee7dc]">{tags.data?.map(tag => <div key={tag.id} className="flex items-center gap-2 py-2"><Badge variant="secondary">{tag.name}</Badge><span className="min-w-0 flex-1 text-xs text-stone-500">/{tag.slug}</span><Button variant="ghost" size="icon" onClick={() => editTag(tag)} aria-label={`Edit ${tag.name}`}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="text-destructive" onClick={() => window.confirm(`Delete ${tag.name}?`) && removeTag.mutate({ id: tag.id })} aria-label={`Delete ${tag.name}`}><Trash2 className="h-3.5 w-3.5" /></Button></div>)}</div></div></div></section>;
+}
+
+function MediaPanel() {
+  const [query, setQuery] = useState(""); const [selected, setSelected] = useState<any | null>(null); const [altText, setAltText] = useState(""); const [caption, setCaption] = useState("");
+  const media = trpc.cms.media.list.useQuery({ perPage: 30, query: query || undefined }); const utils = trpc.useUtils();
+  const upload = trpc.cms.media.upload.useMutation({ onSuccess: () => { utils.cms.media.list.invalidate(); toast.success("Media file added to the library."); }, onError: error => toast.error(error.message) });
+  const update = trpc.cms.media.update.useMutation({ onSuccess: () => { utils.cms.media.list.invalidate(); setSelected(null); toast.success("Media metadata saved."); }, onError: error => toast.error(error.message) });
+  const remove = trpc.cms.media.delete.useMutation({ onSuccess: () => { utils.cms.media.list.invalidate(); setSelected(null); toast.success("Media record removed."); }, onError: error => toast.error(error.message) });
+  function selectFile(file?: File) { if (!file) return; const reader = new FileReader(); reader.onload = () => { const data = String(reader.result).split(",")[1]; if (data) upload.mutate({ fileName: file.name, mimeType: file.type, dataBase64: data }); }; reader.readAsDataURL(file); }
+  function openItem(item: any) { setSelected(item); setAltText(item.altText || ""); setCaption(item.caption || ""); }
+  return <section><div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Asset archive</p><h1 className="mt-1 font-serif text-4xl text-[#30221a]">Media library</h1></div><Label className="inline-flex h-10 cursor-pointer items-center rounded-md bg-[#503525] px-4 text-sm font-medium text-white shadow-sm transition hover:bg-[#3f281c]"><ImagePlus className="mr-2 h-4 w-4" />Upload file<input type="file" className="hidden" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" onChange={event => selectFile(event.target.files?.[0])} /></Label></div><div className="rounded-2xl border border-[#e7dfd3] bg-white p-4">{upload.isPending && <p className="mb-4 text-sm text-stone-500">Uploading securely to storage…</p>}<div className="mb-4 relative max-w-sm"><Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" /><Input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search filenames and titles" className="pl-9" /></div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">{media.data?.map(item => <button key={item.id} onClick={() => openItem(item)} className="group overflow-hidden rounded-xl border border-[#eee7dc] bg-[#fbfaf8] text-left transition hover:-translate-y-0.5 hover:shadow-md"><div className="aspect-square bg-[#efe9df]">{item.mimeType.startsWith("image/") ? <img src={item.url} alt={item.altText || item.fileName} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs text-stone-500">PDF</div>}</div><div className="p-3"><p className="truncate text-xs font-medium text-[#453229]">{item.fileName}</p><p className="mt-1 text-[11px] text-stone-500">{Math.ceil(item.sizeBytes / 1024)} KB</p></div></button>)}</div>{!media.data?.length && !media.isLoading && <div className="py-16 text-center text-sm text-stone-500">No media files have been uploaded.</div>}</div><Dialog open={Boolean(selected)} onOpenChange={open => !open && setSelected(null)}><DialogContent><DialogHeader><DialogTitle>{selected?.fileName}</DialogTitle><DialogDescription>Update accessible media metadata or remove this library record.</DialogDescription></DialogHeader>{selected && <div className="space-y-4"><div className="max-h-56 overflow-hidden rounded-lg bg-[#f3eee6]">{selected.mimeType.startsWith("image/") ? <img src={selected.url} alt={altText || selected.fileName} className="w-full object-contain" /> : <div className="p-8 text-center text-sm text-stone-500">Document file</div>}</div><div><Label>Alternative text</Label><Input className="mt-2" value={altText} onChange={event => setAltText(event.target.value)} /></div><div><Label>Caption</Label><Textarea className="mt-2" value={caption} onChange={event => setCaption(event.target.value)} /></div><div className="flex justify-between gap-3"><Button variant="destructive" onClick={() => window.confirm(`Remove ${selected.fileName} from the library?`) && remove.mutate({ id: selected.id })}><Trash2 className="mr-2 h-4 w-4" />Remove record</Button><Button onClick={() => update.mutate({ id: selected.id, values: { altText: altText || null, caption: caption || null } })} disabled={update.isPending}>{update.isPending ? "Saving…" : "Save metadata"}</Button></div></div>}</DialogContent></Dialog></section>;
+}
+
+function TokenPanel() {
+  const [name, setName] = useState(""); const [rawToken, setRawToken] = useState<string | null>(null); const tokens = trpc.cms.apiTokens.list.useQuery(); const utils = trpc.useUtils();
+  const create = trpc.cms.apiTokens.create.useMutation({ onSuccess: result => { setRawToken(result.token); setName(""); utils.cms.apiTokens.list.invalidate(); }, onError: error => toast.error(error.message) });
+  const revoke = trpc.cms.apiTokens.revoke.useMutation({ onSuccess: () => { utils.cms.apiTokens.list.invalidate(); toast.success("API token revoked."); } });
+  return <section><div className="mb-6"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Programmatic publishing</p><h1 className="mt-1 font-serif text-4xl text-[#30221a]">REST API tokens</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600">Tokens are shown once, stored only as a cryptographic hash, and can be revoked immediately.</p></div><div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]"><div className="rounded-2xl border border-[#e7dfd3] bg-white p-6"><h2 className="font-semibold text-[#30221a]">Create a token</h2><div className="mt-5 space-y-4"><div><Label>Token name</Label><Input className="mt-2" value={name} onChange={event => setName(event.target.value)} placeholder="Editorial automation" /></div><Button className="w-full" onClick={() => name && create.mutate({ name, scopes: ["content:read", "content:write", "taxonomy:write", "media:write"], expiresInDays: 30 })} disabled={create.isPending}><KeyRound className="mr-2 h-4 w-4" />Generate JWT token</Button></div></div><div className="rounded-2xl border border-[#e7dfd3] bg-white">{rawToken && <div className="m-4 rounded-xl border border-amber-200 bg-amber-50 p-4"><p className="text-sm font-medium text-amber-900">Copy this token now. It will not be shown again.</p><div className="mt-3 flex gap-2"><Input readOnly value={rawToken} className="bg-white font-mono text-xs" /><Button size="icon" variant="outline" onClick={() => navigator.clipboard.writeText(rawToken).then(() => toast.success("Token copied."))}><Copy className="h-4 w-4" /></Button><Button size="icon" variant="ghost" onClick={() => setRawToken(null)}><X className="h-4 w-4" /></Button></div></div>}<div className="divide-y divide-[#eee7dc]">{tokens.data?.map(token => <div key={token.id} className="flex items-center gap-4 p-4"><KeyRound className="h-4 w-4 text-[#946b4f]" /><div className="min-w-0 flex-1"><p className="font-medium text-[#30221a]">{token.name}</p><p className="mt-1 text-xs text-stone-500">{token.tokenPrefix} · {token.scopes.join(", ")}</p></div><Badge variant="outline" className={token.revokedAt ? "border-stone-200 text-stone-500" : "border-emerald-200 bg-emerald-50 text-emerald-700"}>{token.revokedAt ? "Revoked" : "Active"}</Badge>{!token.revokedAt && <Button variant="ghost" size="sm" className="text-destructive" onClick={() => revoke.mutate({ id: token.id })}>Revoke</Button>}</div>)}</div>{!tokens.data?.length && <div className="p-12 text-center text-sm text-stone-500">No tokens have been issued yet.</div>}</div></div></section>;
+}
+
+function SettingsPanel() {
+  const query = trpc.cms.settings.get.useQuery(); const utils = trpc.useUtils();
+  const [siteTitle, setSiteTitle] = useState(""); const [siteDescription, setSiteDescription] = useState(""); const [siteIndexing, setSiteIndexing] = useState(true); const [homepageCategories, setHomepageCategories] = useState("");
+  useEffect(() => { if (query.data) { setSiteTitle(String(query.data.siteTitle || "")); setSiteDescription(String(query.data.siteDescription || "")); setSiteIndexing(query.data.siteIndexing !== false); setHomepageCategories(Array.isArray(query.data.homepageCategorySlugs) ? query.data.homepageCategorySlugs.join(", ") : ""); } }, [query.data]);
+  const update = trpc.cms.settings.update.useMutation({ onSuccess: () => { utils.cms.settings.get.invalidate(); utils.site.settings.invalidate(); toast.success("Site settings are live."); }, onError: error => toast.error(error.message) });
+  return <section><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">System settings</p><h1 className="mt-1 font-serif text-4xl text-[#30221a]">Publication identity</h1><div className="mt-6 max-w-2xl rounded-2xl border border-[#e7dfd3] bg-white p-7"><div className="space-y-5"><div><Label>Site title</Label><Input className="mt-2" value={siteTitle} onChange={event => setSiteTitle(event.target.value)} /></div><div><Label>Site description</Label><Textarea className="mt-2" value={siteDescription} onChange={event => setSiteDescription(event.target.value)} /></div><div><Label>Homepage category sections</Label><Input className="mt-2" value={homepageCategories} onChange={event => setHomepageCategories(event.target.value)} placeholder="fashion, street-style, inspiration" /><p className="mt-2 text-xs text-stone-500">Comma-separated category slugs, in the order they should appear.</p></div><label className="flex items-start gap-3 rounded-xl border border-[#eee7dc] p-4 text-sm"><input type="checkbox" checked={siteIndexing} onChange={event => setSiteIndexing(event.target.checked)} className="mt-0.5" /><span><strong className="block text-[#30221a]">Allow search engine indexing</strong><span className="mt-1 block text-stone-500">When disabled, the production adapter emits noindex and excludes content from the sitemap.</span></span></label><Button onClick={() => update.mutate({ siteTitle, siteDescription, siteIndexing, homepageCategorySlugs: homepageCategories.split(",").map(value => slugify(value)).filter(Boolean) })} disabled={update.isPending}>{update.isPending ? "Saving…" : "Save settings"}</Button></div></div></section>;
+}
+
+function Overview() {
+  const posts = trpc.cms.content.list.useQuery({ contentTypeKey: "post", perPage: 100 }); const pages = trpc.cms.content.list.useQuery({ contentTypeKey: "page", perPage: 100 }); const media = trpc.cms.media.list.useQuery({ perPage: 100 }); const [, setLocation] = useLocation();
+  const published = posts.data?.entries.filter(post => post.status === "published").length ?? 0;
+  return <section><div className="mb-8 flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#946b4f]">Control room</p><h1 className="mt-1 font-serif text-4xl tracking-tight text-[#30221a]">Good morning, editor.</h1><p className="mt-2 text-sm text-stone-600">A concise view of the publication’s living archive.</p></div><Button onClick={() => setLocation("/admin/posts")}><Plus className="mr-2 h-4 w-4" />Write a story</Button></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Published stories" value={published} hint="Visible to readers" icon={BookOpenText} /><Metric label="Drafts in progress" value={posts.data?.entries.filter(post => post.status === "draft").length ?? 0} hint="Continue the work" icon={FilePlus2} /><Metric label="Site pages" value={pages.data?.entries.length ?? 0} hint="Evergreen content" icon={LayoutDashboard} /><Metric label="Media assets" value={media.data?.length ?? 0} hint="Stored securely" icon={ImagePlus} /></div><div className="mt-7 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]"><div className="rounded-2xl border border-[#e7dfd3] bg-white p-6"><div className="flex items-center justify-between"><h2 className="font-serif text-2xl text-[#30221a]">Recent stories</h2><Button variant="ghost" size="sm" onClick={() => setLocation("/admin/posts")}>View all</Button></div><div className="mt-4 divide-y divide-[#eee7dc]">{posts.data?.entries.slice(0, 5).map(entry => <div className="flex items-center gap-3 py-3" key={entry.id}><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-[#30221a]">{entry.title}</p><p className="mt-1 text-xs text-stone-500">/{entry.slug}</p></div><StatusBadge status={entry.status} /></div>) || <p className="py-8 text-sm text-stone-500">Your stories will appear here.</p>}</div></div><div className="rounded-2xl bg-[#3e291d] p-6 text-[#f9f2e7]"><Settings2 className="h-5 w-5 text-[#e4bd8d]" /><h2 className="mt-7 font-serif text-2xl">Site configuration</h2><p className="mt-3 text-sm leading-6 text-[#e5d8c8]">Manage global settings, themes, and search appearance from one controlled surface.</p><Button variant="secondary" className="mt-6" onClick={() => setLocation("/admin/settings")}>Review settings</Button></div></div></section>;
+}
+
+export default function Admin() {
+  const [location] = useLocation(); const { user } = useAuth(); const bootstrap = trpc.cms.bootstrap.useMutation();
+  useEffect(() => { bootstrap.mutate(); }, []);
+  const customTypeKey = location.match(/\/admin\/types\/([^/]+)/)?.[1];
+  const screen = useMemo(() => customTypeKey ? <ContentTable type={customTypeKey} /> : location.includes("/types") ? <ContentTypesPanel /> : location.includes("/posts") ? <ContentTable type="post" /> : location.includes("/pages") ? <ContentTable type="page" /> : location.includes("/media") ? <MediaPanel /> : location.includes("/taxonomy") ? <TaxonomyPanel /> : location.includes("/tokens") ? <TokenPanel /> : location.includes("/settings") ? <SettingsPanel /> : <Overview />, [location, customTypeKey]);
+  return <DashboardLayout>{user?.role === "viewer" ? <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">You have viewer access. Content management actions are read-only.</div> : null}{screen}</DashboardLayout>;
+}

@@ -21,15 +21,21 @@ import {
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { BookOpenText, FileText, Images, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings2, Shapes, Tags } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Page 1", path: "/" },
-  { icon: Users, label: "Page 2", path: "/some-path" },
+  { icon: LayoutDashboard, label: "Overview", path: "/admin" },
+  { icon: BookOpenText, label: "Posts", path: "/admin/posts" },
+  { icon: FileText, label: "Pages", path: "/admin/pages" },
+  { icon: Shapes, label: "Content types", path: "/admin/types" },
+  { icon: Images, label: "Media", path: "/admin/media" },
+  { icon: Tags, label: "Taxonomies", path: "/admin/taxonomy" },
+  { icon: KeyRound, label: "API tokens", path: "/admin/tokens" },
+  { icon: Settings2, label: "Settings", path: "/admin/settings" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -169,7 +175,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    Atelier CMS
                   </span>
                 </div>
               ) : null}
@@ -255,7 +261,7 @@ function DashboardLayoutContent({
             </div>
           </div>
         )}
-        <main className="flex-1 p-4">{children}</main>
+        <main className="flex-1 bg-[#f8f6f2] p-4 md:p-7">{children}</main>
       </SidebarInset>
     </>
   );

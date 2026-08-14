@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "atelier-cms-scheduler",
+  "main": "workers/scheduler.ts",
+  "compatibility_date": "2026-08-14",
+  "d1_databases": [
+    {
+      "binding": "CMS_DB",
+      "database_name": "atelier-cms",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  }
+}

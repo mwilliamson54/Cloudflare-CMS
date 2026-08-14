@@ -1,0 +1,23 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
+import { fashionTheme } from "@/themes/fashion/defaults";
+import { ArrowUpRight, Instagram, Menu, Search, X } from "lucide-react";
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+
+export function FashionHeader() {
+  const [searchOpen, setSearchOpen] = useState(false); const [query, setQuery] = useState(""); const [menuOpen, setMenuOpen] = useState(false); const [, setLocation] = useLocation();
+  const settings = trpc.site.settings.useQuery();
+  const title = typeof settings.data?.siteTitle === "string" ? settings.data.siteTitle : fashionTheme.name;
+  function submitSearch(event: React.FormEvent) { event.preventDefault(); if (query.trim()) { setLocation(`/search?q=${encodeURIComponent(query.trim())}`); setSearchOpen(false); } }
+  return <header className="border-b border-[#e9e2d8] bg-[#fbfaf7]"><div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-5 md:px-9"><button className="md:hidden" onClick={() => setMenuOpen(value => !value)} aria-label="Open menu">{menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button><Link href="/" className="font-serif text-2xl tracking-[0.08em] text-[#2d211a] md:text-3xl">{title.toUpperCase()}</Link><nav className="hidden items-center gap-7 md:flex">{fashionTheme.navigation.map(item => <Link key={item.href} href={item.href} className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4a382d] transition hover:text-[#a77150]">{item.label}</Link>)}</nav><div className="flex items-center gap-3"><button onClick={() => setSearchOpen(value => !value)} aria-label="Search"><Search className="h-4 w-4" /></button><Link href="/admin" className="hidden text-xs font-semibold uppercase tracking-[0.14em] text-[#4a382d] hover:text-[#a77150] md:block">Studio</Link></div></div>{menuOpen && <nav className="border-t border-[#e9e2d8] px-5 py-5 md:hidden">{fashionTheme.navigation.map(item => <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="block py-3 text-sm font-semibold uppercase tracking-[0.14em] text-[#4a382d]">{item.label}</Link>)}</nav>}{searchOpen && <form onSubmit={submitSearch} className="border-t border-[#e9e2d8] bg-white px-5 py-4"><div className="mx-auto flex max-w-[740px] gap-2"><Input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Search the journal" /><Button type="submit" size="sm">Search</Button></div></form>}</header>;
+}
+
+export function FashionFooter() {
+  return <footer className="bg-[#30231b] text-[#f8f1e7]"><div className="mx-auto grid max-w-[1400px] gap-10 px-5 py-16 md:grid-cols-[1.2fr_1fr_1fr] md:px-9"><div><p className="font-serif text-3xl tracking-[0.08em]">ATELIER</p><p className="mt-4 max-w-sm text-sm leading-6 text-[#d9c7b8]">{fashionTheme.tagline}</p></div><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d9a975]">Explore</p><div className="mt-5 grid gap-3">{fashionTheme.navigation.map(item => <Link key={item.href} href={item.href} className="text-sm text-[#f8f1e7] transition hover:text-[#d9a975]">{item.label}</Link>)}</div></div><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d9a975]">In good company</p><div className="mt-5 grid gap-3"><a href="#newsletter" className="text-sm text-[#f8f1e7] transition hover:text-[#d9a975]">Newsletter</a><a href="https://www.instagram.com" className="flex items-center gap-2 text-sm text-[#f8f1e7] transition hover:text-[#d9a975]"><Instagram className="h-4 w-4" />Instagram</a><span className="text-sm text-[#d9c7b8]">London · New York · Everywhere</span></div></div></div><div className="border-t border-white/10 px-5 py-5 text-center text-xs text-[#c5b2a1]">© {new Date().getFullYear()} Atelier Journal. All rights reserved.</div></footer>;
+}
+
+export function Newsletter() {
+  return <section id="newsletter" className="bg-[#e7d6c4]"><div className="mx-auto flex max-w-[1100px] flex-col items-center px-5 py-20 text-center"><p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#916345]">Newsletter</p><h2 className="mt-3 font-serif text-4xl text-[#30231b] md:text-5xl">{fashionTheme.newsletterTitle}</h2><p className="mt-4 max-w-xl text-sm leading-6 text-[#584337]">{fashionTheme.newsletterDescription}</p><form onSubmit={event => { event.preventDefault(); }} className="mt-7 flex w-full max-w-md gap-2"><Input type="email" required placeholder="Your email address" className="border-[#c7aa92] bg-white" /><Button type="submit" className="shrink-0">Subscribe <ArrowUpRight className="ml-1 h-4 w-4" /></Button></form></div></section>;
+}
