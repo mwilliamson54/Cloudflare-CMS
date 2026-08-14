@@ -58,3 +58,4 @@
 - [x] Eliminate per-entry taxonomy hydration queries from paginated content lists while preserving entry category and tag contracts.
 - [ ] Add explicit origin/CSRF enforcement before allowing any cross-origin cookie-authenticated CMS mutation flow.
 - [x] Document the R2 original-only thumbnail strategy, per-file retry behavior, immutable delivery caching, and future derivative-pipeline boundary.
+- [ ] Convert public metadata delivery to SSR or an edge HTML-rewrite path before relying on per-entry SEO and social metadata in initial crawler responses.

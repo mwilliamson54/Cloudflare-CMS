@@ -68,6 +68,10 @@ The protected tRPC mutation path relies on the application OAuth session boundar
 
 R2 media uses stable year/month/user object keys, metadata-only database records, server-side MIME and size validation, and immutable delivery caching. The administration UI processes a multi-file queue without aborting successful neighboring uploads after one failure; the practical retry operation is reselecting or re-dropping the individual failed file. Original-only delivery is intentional in the first free-tier deployment. The documented derivative strategy defers thumbnails to a controlled write-time pipeline rather than adding on-demand transformation cost or runtime work.
 
+## SEO Delivery Boundary
+
+Public article pages currently set title, description, canonical, robots, Open Graph fields, and Article JSON-LD through the client metadata component after the application hydrates. Dynamic `sitemap.xml` and `robots.txt` are delivered by server/Pages routes and already honor publication state, entry-level noindex, and the site-wide indexing setting. The metadata component is sufficient for interactive browser rendering, but it does not make per-entry metadata present in the initial HTML response. Crawler-visible metadata and social preview parity therefore require a future SSR or edge HTML-rewrite conversion; this remains explicitly open rather than represented as complete SEO delivery.
+
 ## Structured Markdown Authoring
 
 The Markdown mode now treats the article body as an ordered sequence of portable Markdown blocks. Editors can insert registered core or enabled-plugin blocks, edit each block independently, move it up or down, and remove it without hand-managing separator syntax. The persisted format remains ordinary Markdown separated by blank lines, so REST responses, previews, extensions, and export paths retain a stable text contract. Visual and source-HTML modes remain available; source-mode previews stay sandboxed and all supplied HTML continues to pass through the server-side allowlist sanitizer before persistence.
