@@ -65,4 +65,4 @@
 - [x] Add a bounded administrator aggregate SEO summary that reuses deterministic per-entry recommendations without unbounded scans.
 - [x] Enforce author ownership for REST post/page updates and add authenticated REST DELETE behavior with clear permanent-deletion semantics.
 - [x] Document the R2 original-only thumbnail strategy, per-file retry behavior, immutable delivery caching, and future derivative-pipeline boundary.
-- [ ] Convert public metadata delivery to SSR or an edge HTML-rewrite path before relying on per-entry SEO and social metadata in initial crawler responses.
+- [x] Convert public metadata delivery to SSR or an edge HTML-rewrite path before relying on per-entry SEO and social metadata in initial crawler responses.
