@@ -20,4 +20,11 @@ describe("public content lifecycle visibility", () => {
     expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "page", publishedOnly: true, perPage: 100 });
     expect(repository.getContentEntryBySlug).toHaveBeenCalledWith("post", "scheduled-story");
   });
+
+  it("uses the same published-only contract for category archives", async () => {
+    repository.listContentEntries.mockResolvedValue({ entries: [{ id: 11, categories: [{ slug: "fashion" }] }], total: 1 });
+
+    await expect(siteRouter.createCaller({} as any).categoryPosts({ slug: "fashion" })).resolves.toEqual([{ id: 11, categories: [{ slug: "fashion" }] }]);
+    expect(repository.listContentEntries).toHaveBeenCalledWith({ contentTypeKey: "post", publishedOnly: true, perPage: 100 });
+  });
 });

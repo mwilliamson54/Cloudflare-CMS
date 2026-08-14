@@ -52,6 +52,8 @@ The local WordPress-style adapter now has end-to-end HTTP contract tests. They c
 
 The public site router now has complementary visibility coverage: public post lists preserve their search/pagination inputs while requesting published content only, public pages request published entries only, and an unavailable post slug resolves to `null` rather than exposing scheduled, draft, or archived records. This closes the public query boundary around the existing lifecycle-status enforcement while fuller database-backed scheduled and custom-entry integration tests remain tracked.
 
+Category archives now have the same explicit regression evidence: the route requests a published-only post set before applying the category relationship filter. Scheduled and archived entries therefore cannot enter the category view through a different public query path. Full database-backed lifecycle fixtures and custom-entry administration flows remain tracked separately.
+
 The Cloudflare scheduled worker now has direct regression coverage for its promotion statement. Each run issues one guarded D1 update that transitions only rows with `status = 'scheduled'`, a non-null due timestamp, and `scheduled_at <= now`; it sets the publication timestamp from the scheduled value. The public query contracts therefore keep scheduled records private until the idempotent promotion succeeds, after which homepage, archive, category, search, REST, and sitemap readers use their existing published-only filters.
 
 ## Query-Shape Scalability Increment
