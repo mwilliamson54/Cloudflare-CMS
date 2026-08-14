@@ -14,7 +14,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-export const roleValues = ["admin", "editor", "viewer"] as const;
+export const roleValues = ["admin", "editor", "author", "contributor", "subscriber", "viewer"] as const;
 export const contentStatusValues = ["draft", "scheduled", "published", "archived"] as const;
 export const contentTypeKindValues = ["post", "page", "custom"] as const;
 
@@ -24,7 +24,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", roleValues).default("viewer").notNull(),
+  role: mysqlEnum("role", roleValues).default("subscriber").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -51,8 +51,10 @@ export const media = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     storageKey: varchar("storageKey", { length: 512 }).notNull(),
+    storageProvider: varchar("storageProvider", { length: 48 }).default("s3-compatible").notNull(),
     url: varchar("url", { length: 1024 }).notNull(),
     fileName: varchar("fileName", { length: 255 }).notNull(),
+    originalFileName: varchar("originalFileName", { length: 255 }).notNull(),
     mimeType: varchar("mimeType", { length: 128 }).notNull(),
     sizeBytes: bigint("sizeBytes", { mode: "number" }).notNull(),
     width: int("width"),
@@ -69,6 +71,7 @@ export const media = mysqlTable(
     uniqueIndex("media_storage_key_unique").on(table.storageKey),
     index("media_uploaded_by_index").on(table.uploadedById),
     index("media_mime_type_index").on(table.mimeType),
+    index("media_created_at_index").on(table.createdAt),
   ],
 );
 

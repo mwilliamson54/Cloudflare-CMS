@@ -12,24 +12,27 @@ import {
   deleteMediaRecord,
   deleteTag,
   getContentEntry,
+  getUserById,
   getSettings,
   listApiTokensForUser,
   listCategories,
   listContentEntries,
   listContentTypes,
+  listUsers,
   listMedia,
   listTags,
   revokeApiToken,
   updateCategory,
   updateContentEntry,
   updateMediaRecord,
+  updateUserRole,
   setSettings,
   updateTag,
 } from "../db";
 import { issueApiToken, sha256 } from "../cms/apiTokens";
 import { listEditorBlocks } from "../cms/blocks";
 import { persistMediaUpload } from "../cms/media";
-import { requireCapability, type CmsCapability } from "../cms/permissions";
+import { requireCapability, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
 import { protectedProcedure, router } from "../_core/trpc";
 import "../../plugins/registry";
 
@@ -105,8 +108,22 @@ export const cmsRouter = router({
     update: procedureWithCapability("content:write")
       .input(z.object({ id: z.number().int().positive(), values: contentInput.partial() }))
       .mutation(async ({ ctx, input }) => {
+        const entry = await getContentEntry(input.id);
+        if (!entry) throw new Error("Content entry not found.");
+        requireEntryOwnership(ctx.user, entry);
         if (input.values.status === "published" || input.values.status === "scheduled") requireCapability(ctx.user, "content:publish");
         return updateContentEntry(input.id, { ...input.values, bodyHtml: undefined });
+      }),
+  }),
+  users: router({
+    list: procedureWithCapability("users:manage").query(listUsers),
+    updateRole: procedureWithCapability("users:manage")
+      .input(z.object({ id: z.number().int().positive(), role: z.enum(["admin", "editor", "author", "contributor", "subscriber", "viewer"]) }))
+      .mutation(async ({ ctx, input }) => {
+        const target = await getUserById(input.id);
+        if (!target) throw new Error("User not found.");
+        requireRoleChangeAllowed(ctx.user, target, input.role);
+        return updateUserRole(input.id, input.role);
       }),
   }),
   categories: router({

@@ -62,6 +62,17 @@ export async function getUserById(id: number) {
   return (await db.select().from(users).where(eq(users.id, id)).limit(1))[0];
 }
 
+export async function listUsers() {
+  const db = await requireDb();
+  return db.select().from(users).orderBy(users.name, users.id);
+}
+
+export async function updateUserRole(id: number, role: InsertUser["role"]) {
+  const db = await requireDb();
+  await db.update(users).set({ role }).where(eq(users.id, id));
+  return getUserById(id);
+}
+
 export async function bootstrapCms(): Promise<void> {
   const db = await requireDb();
   const systemTypes: Array<{
@@ -366,8 +377,10 @@ export async function listMedia(options: { query?: string; page?: number; perPag
 
 export async function createMediaRecord(input: {
   storageKey: string;
+  storageProvider: string;
   url: string;
   fileName: string;
+  originalFileName: string;
   mimeType: string;
   sizeBytes: number;
   width?: number | null;

@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE,
   name TEXT,
   password_hash TEXT,
-  role TEXT NOT NULL DEFAULT 'viewer' CHECK(role IN ('admin','editor','viewer')),
+  role TEXT NOT NULL DEFAULT 'subscriber' CHECK(role IN ('admin','editor','author','contributor','subscriber','viewer')),
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -23,8 +23,10 @@ INSERT OR IGNORE INTO content_types (key,label,kind,field_definitions,is_system)
 CREATE TABLE IF NOT EXISTS media (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   storage_key TEXT NOT NULL UNIQUE,
+  storage_provider TEXT NOT NULL DEFAULT 'cloudflare-r2',
   url TEXT NOT NULL,
   file_name TEXT NOT NULL,
+  original_file_name TEXT NOT NULL,
   mime_type TEXT NOT NULL,
   size_bytes INTEGER NOT NULL,
   alt_text TEXT,
@@ -35,6 +37,7 @@ CREATE TABLE IF NOT EXISTS media (
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX IF NOT EXISTS idx_media_created_at ON media(created_at);
 CREATE TABLE IF NOT EXISTS content_entries (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   content_type_id INTEGER NOT NULL,

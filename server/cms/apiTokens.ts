@@ -1,12 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
-import type { ApiTokenScope } from "../../drizzle/schema";
+import { roleValues, type ApiTokenScope, type User } from "../../drizzle/schema";
 
 const encoder = new TextEncoder();
 const algorithm = "HS256";
 
 export type ApiTokenPayload = {
   sub: string;
-  role: "admin" | "editor" | "viewer";
+  role: User["role"];
   scopes: ApiTokenScope[];
   tokenId: string;
 };
@@ -51,7 +51,7 @@ export async function verifyApiToken(token: string, secretValue: string): Promis
 
   if (
     typeof result.payload.sub !== "string" ||
-    !["admin", "editor", "viewer"].includes(String(role)) ||
+    !(roleValues as readonly string[]).includes(String(role)) ||
     !Array.isArray(scopes) ||
     !scopes.every(scope => typeof scope === "string") ||
     typeof tokenId !== "string"

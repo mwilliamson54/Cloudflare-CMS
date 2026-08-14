@@ -24,3 +24,22 @@
 - [ ] Add end-to-end integration tests for REST publication, content visibility, sitemap inclusion, and noindex behavior.
 - [ ] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.
 - [ ] Upgrade the textarea authoring surface to structured block insertion, editing, reordering, deletion, and explicitly sanitized preview coverage.
+- [ ] Audit the existing CMS end to end and record whether every hardening requirement is already implemented, partial, or absent.
+- [x] Expand user levels to WordPress-style roles: administrator, editor, author, contributor, subscriber, and an optional viewer compatibility role, with explicit least-privilege capabilities.
+- [x] Add administrator-only user management for listing users and changing roles, with safeguards against privilege escalation and self-lockout.
+- [ ] Harden R2-first media storage with an explicit provider abstraction, year/month keys, metadata completeness, server-side validation, thumbnail strategy, and no binary database storage.
+- [ ] Implement drag-and-drop multi-file media uploads with validation, progress, retry, gallery metadata, and detail editing.
+- [ ] Implement protected draft previews rendered through the real public theme for posts, pages, scheduled content, and templates.
+- [ ] Add visual and source/HTML authoring modes with allowed-HTML sanitization and documented content safety rules.
+- [ ] Separate page-specific hierarchy/templates from post-specific archives, taxonomy, author, related-content, and templates.
+- [ ] Add theme-level post/page template selection and verify template choice changes public rendering.
+- [ ] Audit and improve dynamic homepage, archive, category, tag, search, sitemap, and cache-invalidation flows after publication changes.
+- [ ] Audit REST endpoints and build a documented WordPress-compatibility adapter for users, menus, settings, individual resources, pagination, filtering, errors, writes, and trash/delete behavior.
+- [ ] Add individual and aggregate SEO analysis with actionable checks, scalable cached/aggregated reporting, structured data, and crawler-visible metadata delivery.
+- [ ] Review schema indexes, query patterns, N+1 risks, media pagination, sitemap chunking, and cache strategy for 50,000 posts and 500,000 media objects.
+- [ ] Complete security audit and harden authorization, media uploads, sanitization, token scopes, CSRF exposure, rate limiting, custom code, and plugin trust boundaries.
+- [ ] Audit plugin lifecycle and security using the reading-time plugin as a removable integration test.
+- [ ] Centralize core/admin/theme design tokens and document the stylesheet separation.
+- [ ] Complete Cloudflare free-plan compatibility review and document unsupported, paid, or operationally constrained features.
+- [ ] Write API documentation, WordPress compatibility documentation, a final audit report, and end-to-end tests for critical CMS paths.
+- [x] Document the intentional `admin`-as-Administrator compatibility mapping and add procedure tests for non-admin user-list/role-update denial and self-lockout protection.

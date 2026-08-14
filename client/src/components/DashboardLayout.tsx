@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { BookOpenText, FileText, Images, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings2, Shapes, Tags } from "lucide-react";
+import { BookOpenText, FileText, Images, KeyRound, LayoutDashboard, LogOut, PanelLeft, Settings2, Shapes, Tags, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -35,6 +35,7 @@ const menuItems = [
   { icon: Images, label: "Media", path: "/admin/media" },
   { icon: Tags, label: "Taxonomies", path: "/admin/taxonomy" },
   { icon: KeyRound, label: "API tokens", path: "/admin/tokens" },
+  { icon: Users, label: "Users", path: "/admin/users" },
   { icon: Settings2, label: "Settings", path: "/admin/settings" },
 ];
 
