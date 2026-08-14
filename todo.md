@@ -46,3 +46,5 @@
 - [x] Document the intentional `admin`-as-Administrator compatibility mapping and add procedure tests for non-admin user-list/role-update denial and self-lockout protection.
 - [ ] Implement an editable visual/WYSIWYG authoring mode and end-to-end tests for visual/source switching and preview safety.
 - [ ] Add protected content trash/delete actions with ownership enforcement, administration UI controls, and full lifecycle tests for posts, pages, and custom entries.
+- [x] Add router-level lifecycle regression tests for post, page, and custom-entry create, update, ownership, and delete behavior, plus public sitemap noindex and publication-state verification.
+- [ ] Add integration coverage for read/list/update/delete of posts, pages, and custom entries, including scheduled and archived states and custom-entry administration flows.
