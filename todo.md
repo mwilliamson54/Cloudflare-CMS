@@ -24,7 +24,7 @@
 - [ ] Add end-to-end integration tests for REST publication, content visibility, sitemap inclusion, and noindex behavior.
 - [ ] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.
 - [ ] Upgrade the textarea authoring surface to structured block insertion, editing, reordering, deletion, and explicitly sanitized preview coverage.
-- [ ] Audit the existing CMS end to end and record whether every hardening requirement is already implemented, partial, or absent.
+- [x] Audit the existing CMS end to end and record whether every hardening requirement is already implemented, partial, or absent.
 - [x] Expand user levels to WordPress-style roles: administrator, editor, author, contributor, subscriber, and an optional viewer compatibility role, with explicit least-privilege capabilities.
 - [x] Add administrator-only user management for listing users and changing roles, with safeguards against privilege escalation and self-lockout.
 - [ ] Harden R2-first media storage with an explicit provider abstraction, year/month keys, metadata completeness, server-side validation, thumbnail strategy, and no binary database storage.
