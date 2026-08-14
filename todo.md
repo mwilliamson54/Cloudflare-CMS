@@ -23,3 +23,4 @@
 - [ ] Complete custom-content editing, media replacement/search metadata, SEO controls, menus, header/footer, theme/plugin controls, and controlled custom-code settings in the administration UI.
 - [ ] Add end-to-end integration tests for REST publication, content visibility, sitemap inclusion, and noindex behavior.
 - [ ] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.
+- [ ] Upgrade the textarea authoring surface to structured block insertion, editing, reordering, deletion, and explicitly sanitized preview coverage.

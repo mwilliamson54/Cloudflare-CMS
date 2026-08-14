@@ -27,9 +27,11 @@ import {
   updateTag,
 } from "../db";
 import { issueApiToken, sha256 } from "../cms/apiTokens";
+import { listEditorBlocks } from "../cms/blocks";
 import { persistMediaUpload } from "../cms/media";
 import { requireCapability, type CmsCapability } from "../cms/permissions";
 import { protectedProcedure, router } from "../_core/trpc";
+import "../../plugins/registry";
 
 const statusSchema = z.enum(["draft", "scheduled", "published", "archived"]);
 const fieldSchema = z.object({
@@ -81,6 +83,7 @@ export const cmsRouter = router({
     await bootstrapCms();
     return { success: true };
   }),
+  editorBlocks: procedureWithCapability("content:read").query(() => listEditorBlocks()),
   contentTypes: router({
     list: procedureWithCapability("content:read").query(async () => {
       await bootstrapCms();
