@@ -147,6 +147,22 @@ describe("CMS content lifecycle procedures", () => {
     await expect(otherAuthor.content.preview({ id: 33 })).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
 
+  it("allows an owner to preview scheduled pages while denying a non-owner", async () => {
+    repository.getContentEntry.mockResolvedValue({
+      ...entry(12, 52),
+      contentTypeId: 2,
+      title: "Private seasonal page",
+      status: "scheduled",
+      scheduledAt: new Date("2026-09-01T09:00:00.000Z"),
+      templateKey: "lookbook",
+    });
+
+    const owner = cmsRouter.createCaller(context("author", 12));
+    const otherAuthor = cmsRouter.createCaller(context("author", 99));
+    await expect(owner.content.preview({ id: 52 })).resolves.toMatchObject({ id: 52, authorId: 12, status: "scheduled", templateKey: "lookbook" });
+    await expect(otherAuthor.content.preview({ id: 52 })).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
   it("rejects an author editing or deleting another author's content, while an editor can complete the lifecycle", async () => {
     const author = cmsRouter.createCaller(context("author", 99));
     await expect(author.content.update({ id: 33, values: { title: "Unauthorized revision" } })).rejects.toMatchObject({ code: "FORBIDDEN" });
