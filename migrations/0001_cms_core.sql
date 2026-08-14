@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS content_entries (
   excerpt TEXT,
   body_markdown TEXT,
   featured_media_id INTEGER,
+  parent_id INTEGER,
+  template_key TEXT NOT NULL DEFAULT 'default',
   status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft','scheduled','published','archived')),
   scheduled_at TEXT,
   published_at TEXT,
@@ -61,6 +63,8 @@ CREATE TABLE IF NOT EXISTS content_entries (
   UNIQUE(content_type_id,slug)
 );
 CREATE INDEX IF NOT EXISTS idx_content_status_published ON content_entries(status,published_at);
+CREATE INDEX IF NOT EXISTS idx_content_parent ON content_entries(parent_id);
+CREATE INDEX IF NOT EXISTS idx_content_template ON content_entries(template_key);
 CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,

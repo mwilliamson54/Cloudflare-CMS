@@ -29,6 +29,13 @@
       "when": 1786701613234,
       "tag": "0003_luxuriant_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1786702485537,
+      "tag": "0004_white_zodiak",
+      "breakpoints": true
     }
   ]
 }

@@ -61,7 +61,7 @@ function ContentEditor({ type, entry, onDone }: { type: ContentKind; entry?: any
   const [excerpt, setExcerpt] = useState(entry?.excerpt ?? "");
   const [body, setBody] = useState(entry?.bodyMarkdown ?? "# Start writing\n\nCreate a considered editorial story with **Markdown** support.");
   const [status, setStatus] = useState<Status>(entry?.status ?? "draft");
-  const [scheduledAt, setScheduledAt] = useState(entry?.scheduledAt ? new Date(entry.scheduledAt).toISOString().slice(0, 16) : "");
+  const [scheduledAt, setScheduledAt] = useState(entry?.scheduledAt ? new Date(entry.scheduledAt).toISOString().slice(0, 16) : ""); const [templateKey, setTemplateKey] = useState(entry?.templateKey ?? "default");
   const [seoTitle, setSeoTitle] = useState(entry?.seoTitle ?? ""); const [seoDescription, setSeoDescription] = useState(entry?.seoDescription ?? ""); const [canonicalUrl, setCanonicalUrl] = useState(entry?.canonicalUrl ?? ""); const [robotsIndex, setRobotsIndex] = useState(entry?.robotsIndex !== false); const [robotsFollow, setRobotsFollow] = useState(entry?.robotsFollow !== false);
   const blocks = trpc.cms.editorBlocks.useQuery();
   const [preview, setPreview] = useState(false);
@@ -81,6 +81,7 @@ function ContentEditor({ type, entry, onDone }: { type: ContentKind; entry?: any
       slug: preparedSlug,
       excerpt: excerpt || null,
       bodyMarkdown: body,
+      templateKey: templateKey as "default" | "landing" | "narrative" | "lookbook" | "minimal",
       status,
       scheduledAt: status === "scheduled" ? new Date(scheduledAt) : null,
       seoTitle: seoTitle || null,
@@ -105,6 +106,7 @@ function ContentEditor({ type, entry, onDone }: { type: ContentKind; entry?: any
           <div className="mt-7 space-y-5">
             <div><Label htmlFor="entry-title">Title</Label><Input id="entry-title" value={title} onChange={event => { setTitle(event.target.value); if (!slug) setSlug(slugify(event.target.value)); }} placeholder="The shape of a new season" className="mt-2 h-11" /></div>
             <div><Label htmlFor="entry-slug">URL slug</Label><Input id="entry-slug" value={slug} onChange={event => setSlug(slugify(event.target.value))} placeholder="the-shape-of-a-new-season" className="mt-2" /></div>
+            <div><Label>Public template</Label><Select value={templateKey} onValueChange={setTemplateKey}><SelectTrigger className="mt-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="default">Default editorial</SelectItem><SelectItem value="landing">Landing</SelectItem><SelectItem value="narrative">Narrative feature</SelectItem><SelectItem value="lookbook">Lookbook</SelectItem><SelectItem value="minimal">Minimal</SelectItem></SelectContent></Select></div>
             <div><Label htmlFor="entry-excerpt">Excerpt</Label><Textarea id="entry-excerpt" value={excerpt} onChange={event => setExcerpt(event.target.value)} placeholder="A concise editorial introduction for cards and social sharing." className="mt-2 min-h-22" /></div>
             <div><Label htmlFor="entry-body">Markdown content</Label><div className="mt-2 flex flex-wrap gap-2">{blocks.data?.map(block => <Button type="button" variant="outline" size="sm" key={block.type} onClick={() => setBody((value: string) => `${value}\n\n${block.markdown}`)}>{block.label}</Button>)}</div><Textarea id="entry-body" value={body} onChange={event => setBody(event.target.value)} className="mt-2 min-h-80 font-mono text-sm leading-6" /></div>
           </div>

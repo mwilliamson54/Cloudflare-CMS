@@ -148,6 +148,8 @@ export type CreateContentInput = {
   bodyMarkdown?: string | null;
   bodyHtml?: string | null;
   featuredMediaId?: number | null;
+  parentId?: number | null;
+  templateKey?: string;
   status: "draft" | "scheduled" | "published" | "archived";
   scheduledAt?: Date | null;
   seoTitle?: string | null;
@@ -186,6 +188,8 @@ export async function createContentEntry(input: CreateContentInput) {
     bodyMarkdown: input.bodyMarkdown ?? null,
     bodyHtml: input.bodyHtml ?? null,
     featuredMediaId: input.featuredMediaId ?? null,
+    parentId: input.parentId ?? null,
+    templateKey: input.templateKey ?? "default",
     status: input.status,
     ...dates,
     seoTitle: input.seoTitle ?? null,
@@ -218,6 +222,8 @@ export async function updateContentEntry(id: number, input: Partial<CreateConten
       ...(input.bodyMarkdown !== undefined ? { bodyMarkdown: input.bodyMarkdown } : {}),
       ...(input.bodyHtml !== undefined ? { bodyHtml: input.bodyHtml } : {}),
       ...(input.featuredMediaId !== undefined ? { featuredMediaId: input.featuredMediaId } : {}),
+      ...(input.parentId !== undefined ? { parentId: input.parentId } : {}),
+      ...(input.templateKey !== undefined ? { templateKey: input.templateKey } : {}),
       ...(input.status !== undefined ? { status: input.status } : {}),
       ...dates,
       ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle } : {}),

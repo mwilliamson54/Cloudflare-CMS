@@ -88,6 +88,8 @@ export const contentEntries = mysqlTable(
     bodyHtml: text("bodyHtml"),
     fieldData: json("fieldData").$type<Record<string, unknown>>(),
     featuredMediaId: int("featuredMediaId"),
+    parentId: int("parentId"),
+    templateKey: varchar("templateKey", { length: 96 }).default("default").notNull(),
     status: mysqlEnum("status", contentStatusValues).default("draft").notNull(),
     scheduledAt: datetime("scheduledAt", { mode: "date" }),
     publishedAt: datetime("publishedAt", { mode: "date" }),
@@ -110,6 +112,8 @@ export const contentEntries = mysqlTable(
     index("content_entries_status_published_index").on(table.status, table.publishedAt),
     index("content_entries_author_index").on(table.authorId),
     index("content_entries_featured_media_index").on(table.featuredMediaId),
+    index("content_entries_parent_index").on(table.parentId),
+    index("content_entries_template_index").on(table.templateKey),
   ],
 );
 

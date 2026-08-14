@@ -1,0 +1,40 @@
+# WordPress-Compatible REST API
+
+The Cloudflare Pages adapter exposes WordPress-style paths below `/api/wp/v2`. Collection responses use JSON and support the documented pagination conventions for content and media.
+
+| Endpoint | Methods | Purpose |
+| --- | --- | --- |
+| `/api/wp/v2/posts` | `GET`, `POST` | List published posts or create a post with a JWT that has `content:write`. |
+| `/api/wp/v2/posts/{id-or-slug}` | `GET` | Fetch one published post. |
+| `/api/wp/v2/pages` | `GET`, `POST` | List published pages or create a page with a JWT that has `content:write`. |
+| `/api/wp/v2/pages/{id-or-slug}` | `GET` | Fetch one published page. |
+| `/api/wp/v2/media` | `GET`, `POST` | List media or upload base64-encoded media with `media:write`. |
+| `/api/wp/v2/media/{id}` | `GET` | Fetch one media object. |
+| `/api/wp/v2/categories` and `/tags` | `GET` | List taxonomy terms. |
+| `/api/wp/v2/categories/{id}` and `/tags/{id}` | `GET` | Fetch one taxonomy term. |
+| `/api/wp/v2/users` and `/users/{id}` | `GET` | Fetch public author identity fields only. |
+
+## Authentication
+
+Create a JWT in **CMS → API tokens**. Tokens are shown once, stored as hashes, have explicit scopes, include the issuing role, and can be revoked. Send the token in an `Authorization: Bearer <token>` header.
+
+```bash
+curl -X POST "$CMS_ORIGIN/api/wp/v2/posts" \
+  -H "Authorization: Bearer $CMS_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "title": "A considered silhouette",
+    "slug": "considered-silhouette",
+    "status": "draft",
+    "content": { "raw": "# Notes\n\nDraft body." },
+    "meta": { "seo_title": "A considered silhouette" }
+  }'
+```
+
+`admin`, `editor`, and `author` may publish or schedule through a valid content-writing token. Contributors may create drafts but cannot publish or schedule. Subscriber and Viewer roles cannot issue or use write-capable CMS tokens.
+
+## Media Uploads
+
+`POST /api/wp/v2/media` accepts `fileName`, `mimeType`, `dataBase64`, optional `alt_text`, and optional `title`. The deployed adapter writes directly to the `CMS_MEDIA` R2 binding with a `uploads/YYYY/MM/u{userId}/` key. Supported types are JPEG, PNG, WebP, AVIF, GIF, and PDF. Each object is limited to 10 MB.
+
+> The public media route is `/media/{key}`. Metadata is persisted in D1; media bytes remain in R2.

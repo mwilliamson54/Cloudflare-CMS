@@ -33,6 +33,7 @@ import { issueApiToken, sha256 } from "../cms/apiTokens";
 import { listEditorBlocks } from "../cms/blocks";
 import { persistMediaUpload } from "../cms/media";
 import { requireCapability, requireEntryOwnership, requireRoleChangeAllowed, type CmsCapability } from "../cms/permissions";
+import { analyzeSeo } from "../cms/seoAnalysis";
 import { protectedProcedure, router } from "../_core/trpc";
 import "../../plugins/registry";
 
@@ -60,6 +61,8 @@ const contentInput = z
     excerpt: z.string().max(5000).nullable().optional(),
     bodyMarkdown: z.string().max(100_000).nullable().optional(),
     featuredMediaId: z.number().int().positive().nullable().optional(),
+    parentId: z.number().int().positive().nullable().optional(),
+    templateKey: z.enum(["default", "landing", "narrative", "lookbook", "minimal"]).default("default"),
     status: statusSchema,
     scheduledAt: z.coerce.date().nullable().optional(),
     seoTitle: z.string().max(300).nullable().optional(),
@@ -87,6 +90,14 @@ export const cmsRouter = router({
     return { success: true };
   }),
   editorBlocks: procedureWithCapability("content:read").query(() => listEditorBlocks()),
+  seo: router({
+    analyze: procedureWithCapability("content:write").input(z.object({ id: z.number().int().positive() })).query(async ({ ctx, input }) => {
+      const entry = await getContentEntry(input.id);
+      if (!entry) throw new Error("Content entry not found.");
+      requireEntryOwnership(ctx.user, entry);
+      return analyzeSeo({ title: entry.title, description: entry.seoDescription || entry.excerpt, focusKeyword: entry.focusKeyword, bodyMarkdown: entry.bodyMarkdown, featuredMediaId: entry.featuredMediaId, canonicalUrl: entry.canonicalUrl, robotsIndex: entry.robotsIndex });
+    }),
+  }),
   contentTypes: router({
     list: procedureWithCapability("content:read").query(async () => {
       await bootstrapCms();
