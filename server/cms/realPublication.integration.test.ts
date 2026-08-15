@@ -5,13 +5,16 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 const auth = vi.hoisted(() => ({ authenticateRestRequest: vi.fn() }));
 vi.mock("./restAuth", () => auth);
 
-import { bootstrapCms, deleteContentEntry } from "../db";
+import { bootstrapCms, createCategory, createTag, deleteCategory, deleteContentEntry, deleteTag } from "../db";
+import { siteRouter } from "../routers/site";
 import { registerSeoRoutes } from "./seo";
 import { registerWordPressRestRoutes } from "./wpRest";
 
 let server: Server | undefined;
 let baseUrl = "";
 const createdIds: number[] = [];
+const createdCategoryIds: number[] = [];
+const createdTagIds: number[] = [];
 const authorId = 900_001;
 
 async function request(path: string, init?: RequestInit) {
@@ -35,6 +38,8 @@ describe("real repository REST publication lifecycle", () => {
 
   afterEach(async () => {
     await Promise.all(createdIds.splice(0).map(id => deleteContentEntry(id)));
+    await Promise.all(createdCategoryIds.splice(0).map(id => deleteCategory(id)));
+    await Promise.all(createdTagIds.splice(0).map(id => deleteTag(id)));
     await new Promise<void>(resolve => server?.close(() => resolve()));
     server = undefined;
   });
@@ -128,5 +133,43 @@ describe("real repository REST publication lifecycle", () => {
     expect((await request(`/api/wp/v2/${resource}/${body.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ status: "published" }) })).status).toBe(200);
     await expect((await request(`/api/wp/v2/${resource}?search=${encodeURIComponent(title)}`)).json()).resolves.toMatchObject([{ id: body.id, slug, status: "published" }]);
     await expect((await request("/sitemap.xml")).text()).resolves.toContain(resource === "posts" ? `/blog/${slug}` : `/${slug}`);
+  });
+
+  it("updates homepage/archive, category, tag, search, and sitemap readers across archive, trash, and restore transitions", async () => {
+    const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const title = `Surface lifecycle ${suffix}`;
+    const slug = `surface-lifecycle-${suffix}`;
+    const category = await createCategory({ name: `Surface category ${suffix}`, slug: `surface-category-${suffix}` });
+    const tag = await createTag({ name: `Surface tag ${suffix}`, slug: `surface-tag-${suffix}` });
+    createdCategoryIds.push(category.id);
+    createdTagIds.push(tag.id);
+    const created = await request("/api/wp/v2/posts", { method: "POST", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ title, slug, status: "published", content: { raw: "Lifecycle surface proof" }, categories: [category.id], tags: [tag.id] }) });
+    expect(created.status).toBe(201);
+    const post = await created.json() as { id: number };
+    createdIds.push(post.id);
+    const site = siteRouter.createCaller({} as any);
+    const expectVisibleEverywhere = async () => {
+      await expect(site.posts()).resolves.toMatchObject({ entries: expect.arrayContaining([expect.objectContaining({ id: post.id, slug })]) });
+      await expect(site.posts({ query: title })).resolves.toMatchObject({ entries: [expect.objectContaining({ id: post.id, slug })] });
+      await expect(site.categoryPosts({ slug: category.slug })).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: post.id, slug })]));
+      await expect(site.tagPosts({ slug: tag.slug })).resolves.toEqual(expect.arrayContaining([expect.objectContaining({ id: post.id, slug })]));
+      await expect((await request("/sitemap.xml")).text()).resolves.toContain(`/blog/${slug}`);
+    };
+    const expectHiddenEverywhere = async () => {
+      await expect(site.posts({ query: title })).resolves.toMatchObject({ entries: [] });
+      await expect(site.categoryPosts({ slug: category.slug })).resolves.not.toEqual(expect.arrayContaining([expect.objectContaining({ id: post.id })]));
+      await expect(site.tagPosts({ slug: tag.slug })).resolves.not.toEqual(expect.arrayContaining([expect.objectContaining({ id: post.id })]));
+      await expect((await request("/sitemap.xml")).text()).resolves.not.toContain(`/blog/${slug}`);
+    };
+
+    await expectVisibleEverywhere();
+    expect((await request(`/api/wp/v2/posts/${post.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ status: "archived" }) })).status).toBe(200);
+    await expectHiddenEverywhere();
+    expect((await request(`/api/wp/v2/posts/${post.id}`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({ status: "published" }) })).status).toBe(200);
+    await expectVisibleEverywhere();
+    expect((await request(`/api/wp/v2/posts/${post.id}`, { method: "DELETE", headers: { authorization: "Bearer real-db-token" } })).status).toBe(200);
+    await expectHiddenEverywhere();
+    expect((await request(`/api/wp/v2/posts/${post.id}?restore=true`, { method: "PATCH", headers: { authorization: "Bearer real-db-token", "content-type": "application/json" }, body: JSON.stringify({}) })).status).toBe(200);
+    await expectVisibleEverywhere();
   });
 });

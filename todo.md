@@ -10,7 +10,7 @@
 - [x] Build category and tag management, including hierarchical category support.
 - [x] Build a rich Markdown editor with a secure live preview and extensible block model.
 - [x] Build an S3-compatible media-library workflow with upload, browse, metadata, replace, search, and delete-reference actions.
-- [ ] Build a premium admin dashboard using the provided dashboard layout, with complete content, taxonomies, media, tokens, SEO, menus, settings, themes, plugins, and system areas.
+- [x] Build a premium admin dashboard using the provided dashboard layout, with complete content, taxonomies, media, tokens, SEO, menus, settings, themes, plugins, and system areas.
 - [x] Build a polished, responsive fashion-magazine frontend with hero, configurable category sections, article cards, article detail views, and search.
 - [x] Implement SEO metadata, canonical URLs, Open Graph cards, robots controls, dynamic sitemap.xml, and robots.txt.
 - [x] Implement CMS configuration for header, footer, menus, theme settings, plugins, controlled custom CSS, and site-wide index controls.
@@ -18,9 +18,9 @@
 - [x] Add Cloudflare Pages Functions, D1, R2, and KV deployment configuration and environment-variable documentation.
 - [x] Write and run automated tests for authorization, JWT tokens, workflow rules, REST endpoints, content visibility, sitemap, and SEO behavior.
 - [x] Verify public and administrative views across desktop and mobile layouts, resolve visual or runtime issues, and document deployment steps.
-- [ ] Enforce role capability checks across all CMS mutation procedures and verify each role boundary with automated tests.
+- [x] Enforce role capability checks across all CMS mutation procedures and verify each role boundary with automated tests.
 - [x] Complete the end-to-end REST token lifecycle: issuance, hashed persistence, database-backed revocation validation, usage metadata, and management UI.
-- [ ] Complete custom-content editing, media replacement/search metadata, SEO controls, menus, header/footer, theme/plugin controls, and controlled custom-code settings in the administration UI.
+- [x] Complete custom-content editing, media replacement/search metadata, SEO controls, menus, header/footer, theme/plugin controls, and controlled custom-code settings in the administration UI.
 - [x] Add end-to-end integration tests for REST publication, content visibility, sitemap inclusion, and noindex behavior.
 - [x] Wire per-entry SEO fields into the editor, public metadata, canonical output, robots directives, sitemap behavior, and automated tests.
 - [x] Upgrade the textarea authoring surface to structured block insertion, editing, reordering, deletion, and explicitly sanitized preview coverage.
@@ -33,16 +33,16 @@
 - [x] Add visual and source/HTML authoring modes with allowed-HTML sanitization and documented content safety rules.
 - [x] Separate page-specific hierarchy/templates from post-specific archives, taxonomy, author, related-content, and templates.
 - [x] Add theme-level post/page template selection and verify template choice changes protected public preview rendering.
-- [ ] Audit and improve dynamic homepage, archive, category, tag, search, sitemap, and cache-invalidation flows after publication changes.
+- [x] Audit and improve dynamic homepage, archive, category, tag, search, sitemap, and cache-invalidation flows after publication changes.
 - [x] Audit REST endpoints and document the WordPress-compatibility adapter’s supported users, individual resources, pagination, filtering, errors, writes, trash/delete behavior, plus intentional menu/settings administrative-resource non-support boundaries.
 - [x] Add individual and aggregate SEO analysis with actionable checks, scalable cached/aggregated reporting, structured data, and crawler-visible metadata delivery.
 - [x] Review schema indexes, query patterns, N+1 risks, media pagination, sitemap chunking, and cache strategy for 50,000 posts and 500,000 media objects.
-- [ ] Complete security audit and harden authorization, media uploads, sanitization, token scopes, CSRF exposure, rate limiting, custom code, and plugin trust boundaries.
+- [x] Complete security audit and harden authorization, media uploads, sanitization, token scopes, CSRF exposure, rate limiting, custom code, and plugin trust boundaries.
 - [x] Audit plugin lifecycle and security using the reading-time plugin as a removable integration test.
 - [x] Centralize core/admin/theme design tokens and document the stylesheet separation.
 - [x] Complete Cloudflare free-plan compatibility review and document unsupported, paid, or operationally constrained features.
 - [x] Verify that the actual reading-time plugin can be registered and removed cleanly, and document plugin trust boundaries and lifecycle safeguards.
-- [ ] Write API documentation, WordPress compatibility documentation, a final audit report, and end-to-end tests for critical CMS paths.
+- [x] Write API documentation, WordPress compatibility documentation, a final audit report, and end-to-end tests for critical CMS paths.
 - [x] Document the intentional `admin`-as-Administrator compatibility mapping and add procedure tests for non-admin user-list/role-update denial and self-lockout protection.
 - [x] Implement an editable visual/WYSIWYG authoring mode and end-to-end tests for visual/source switching and preview safety.
 - [x] Add protected content trash/delete actions with ownership enforcement, administration UI controls, and full lifecycle tests for posts, pages, and custom entries.
@@ -69,3 +69,6 @@
 - [x] Add true per-file upload progress reporting in the media queue.
 - [x] Add explicit client-side MIME validation for selected and dropped media files, with regression coverage.
 - [x] Expand the media detail editor to update title and description metadata, with end-to-end coverage.
+- [x] Add integration or browser coverage proving homepage, archive, category, tag, and search reflect publish, archive, trash, and restore lifecycle transitions.
+- [x] Add a critical-path browser test that creates and publishes CMS content, then verifies its public archive/search visibility.
+- [x] Add a browser test for a key administrator configuration path affecting the public shell, such as header menus or plugin activation.

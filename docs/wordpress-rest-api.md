@@ -1,22 +1,24 @@
 # WordPress-Compatible REST API
 
-The Cloudflare Pages adapter exposes WordPress-style paths below `/api/wp/v2`. Collection responses use JSON and support the documented pagination conventions for content and media.
+Atelier CMS exposes a WordPress-shaped publishing API below `/api/wp/v2`. The local Express adapter and the Cloudflare Pages Function share the required post, page, media, taxonomy, and author-identity paths. The implementation deliberately preserves the WordPress response conventions most useful to programmatic publishers while retaining CMS-specific controls for roles, trash, and trusted site configuration.
 
-| Endpoint | Methods | Purpose |
+## Resource Matrix
+
+| Endpoint | Supported methods | Authentication and purpose |
 | --- | --- | --- |
-| `/api/wp/v2/posts` | `GET`, `POST` | List published posts or create a post with a JWT that has `content:write`. |
-| `/api/wp/v2/posts/{id-or-slug}` | `GET`, `PATCH`, `DELETE` | Fetch a published post; update, restore, trash, or force-delete with a content-writing JWT. |
-| `/api/wp/v2/pages` | `GET`, `POST` | List published pages or create a page with a JWT that has `content:write`. |
-| `/api/wp/v2/pages/{id-or-slug}` | `GET`, `PATCH`, `DELETE` | Fetch a published page; update, restore, trash, or force-delete with a content-writing JWT. |
-| `/api/wp/v2/media` | `GET`, `POST` | List media or upload base64-encoded media with `media:write`. |
-| `/api/wp/v2/media/{id}` | `GET`, `PATCH` | Fetch a media object or replace its file with `media:write` while preserving its ID. |
-| `/api/wp/v2/categories` and `/tags` | `GET` | List taxonomy terms. |
-| `/api/wp/v2/categories/{id}` and `/tags/{id}` | `GET` | Fetch one taxonomy term. |
-| `/api/wp/v2/users` and `/users/{id}` | `GET` | Fetch paginated public author identity fields only; email and role data are never returned. |
+| `/api/wp/v2/posts` | `GET`, `POST` | Lists published, non-trashed posts; creates a post with `content:write`. |
+| `/api/wp/v2/posts/{id-or-slug}` | `GET`, `PATCH`, `DELETE` | Public published read by ID or slug; authenticated update, restore, soft trash, or permanent deletion. |
+| `/api/wp/v2/pages` | `GET`, `POST` | Lists published, non-trashed pages; creates a page with `content:write`. |
+| `/api/wp/v2/pages/{id-or-slug}` | `GET`, `PATCH`, `DELETE` | Public published read by ID or slug; authenticated update, restore, soft trash, or permanent deletion. |
+| `/api/wp/v2/media` | `GET`, `POST` | Lists media; uploads a base64-encoded object with `media:write`. |
+| `/api/wp/v2/media/{id}` | `GET`, `PATCH` | Retrieves metadata or replaces bytes while preserving the stable media ID. |
+| `/api/wp/v2/categories` and `/api/wp/v2/tags` | `GET` | Lists public taxonomy terms. The local adapter also accepts `POST` with `taxonomy:write`; site-wide taxonomy administration remains a dashboard capability for Pages deployments. |
+| `/api/wp/v2/categories/{id}` and `/api/wp/v2/tags/{id}` | `GET` | Retrieves one public taxonomy term. |
+| `/api/wp/v2/users` and `/api/wp/v2/users/{id}` | `GET` | Returns privacy-safe author identity fields only. Email and CMS role are never exposed. |
 
-## Authentication
+## Authentication, Roles, and Scopes
 
-Create a JWT in **CMS → API tokens**. Tokens are shown once, stored as hashes, have explicit scopes, include the issuing role, and can be revoked. Send the token in an `Authorization: Bearer <token>` header.
+Create a token in **CMS → API tokens**. A raw token is shown once, while the database stores only its hash, persistent token ID, scopes, expiry, revocation timestamp, and last-use timestamp. Send it as a bearer token.
 
 ```bash
 curl -X POST "$CMS_ORIGIN/api/wp/v2/posts" \
@@ -31,31 +33,41 @@ curl -X POST "$CMS_ORIGIN/api/wp/v2/posts" \
   }'
 ```
 
-`admin`, `editor`, and `author` may publish or schedule through a valid content-writing token. Contributors may create drafts but cannot publish or schedule. Subscriber and Viewer roles cannot issue or use write-capable CMS tokens.
+`content:write` is required for post and page mutation; `media:write` is required for media upload/replacement; and `taxonomy:write` is required for local taxonomy creation. Administrators, editors, and authors may publish or schedule their own permitted content. Contributors may create and revise only their own drafts. Subscribers and viewers cannot create write-capable CMS tokens or use write endpoints. Author and contributor REST mutations are ownership-checked.
 
-## Media Uploads
+## Request Shapes
 
-`POST /api/wp/v2/media` accepts `fileName`, `mimeType`, `dataBase64`, optional `alt_text`, and optional `title`. The deployed adapter writes directly to the `CMS_MEDIA` R2 binding with a `uploads/YYYY/MM/u{userId}/` key. Supported types are JPEG, PNG, WebP, AVIF, GIF, and PDF. Each object is limited to 10 MB.
+Post and page creation accepts `title`, `slug`, `status`, `date`, `excerpt`, `content`, `featured_media`, `categories`, `tags`, and selected SEO properties under `meta`: `seo_title`, `seo_description`, `canonical_url`, `robots_index`, and `robots_follow`. A WordPress-style scalar or `{ "raw": "…" }` object is accepted for `title`, `excerpt`, and `content`.
 
-> The public media route is `/media/{key}`. Metadata is persisted in D1; media bytes remain in R2.
+Media upload requires `fileName`, `mimeType`, and `dataBase64`, with optional `alt_text` and `title`. Supported MIME types are JPEG, PNG, WebP, AVIF, GIF, and PDF. A file must be at least one byte and no more than 10 MB. Cloudflare production writes bytes to `CMS_MEDIA` R2 under a year/month/uploader key; D1 stores only the metadata and object reference.
 
-## Collections and Pagination
+```json
+{
+  "fileName": "lookbook-cover.webp",
+  "mimeType": "image/webp",
+  "dataBase64": "UklGRi4AAABXRUJQVlA4...",
+  "alt_text": "Tailored yellow set on a basketball court",
+  "title": "Lookbook cover"
+}
+```
 
-The `posts`, `pages`, `media`, and `users` collections accept `page` and `per_page` parameters; `per_page` is capped at 100. Their responses include `X-WP-Total` and `X-WP-TotalPages` headers. Production post and page collections also accept `search`, which filters title, excerpt, and body content before calculating both the rows and pagination totals.
+`PATCH /api/wp/v2/media/{id}` uses the same required file fields and writes a new object key while preserving the media record ID used by content references. The public media delivery route is `/media/{key}`.
 
-## Intentional Compatibility Boundaries
+## Pagination, Search, and Visibility
 
-The adapter implements the public content, taxonomy, media, and author-identity resources that programmatic publishing clients require. Menu configuration and global site settings are **not** exposed as WordPress REST write resources. They remain protected CMS administration procedures because they control site-wide behavior, custom CSS, trusted plugin activation, and indexing policy; exposing them through general bearer-token scopes would weaken the privilege boundary. Public menu and public setting values continue to be served through the CMS public site contract.
+`posts`, `pages`, `media`, and `users` accept `page` and `per_page`; `per_page` is bounded to 100. Their collection responses provide `X-WP-Total` and `X-WP-TotalPages`. Post and page collections accept `search` and match title, excerpt, and body before calculating totals.
 
-The public `/users` collection and individual identity responses are contract-tested in both the local adapter and the Cloudflare Pages Function. Both return the same privacy-safe identity fields, pagination headers, and stable author URL shape.
+Public post and page reads return only published, non-trashed content. A draft, scheduled, archived, trashed, or absent individual resource returns `404 rest_post_invalid_id` without disclosing editorial metadata. Sitemap generation applies the same published/non-trashed rule and additionally excludes entries marked `noindex`.
 
-## Media Replacement
+## Trash, Restore, and Permanent Deletion
 
-`PATCH /api/wp/v2/media/{id}` accepts the same validated file fields as upload: `fileName`, `mimeType`, and `dataBase64`. The CMS writes the replacement to a new R2 object and updates the existing metadata record rather than creating a new media ID. Existing post and page references therefore remain valid.
+The default `DELETE /api/wp/v2/posts/{id}` or `/pages/{id}` is a soft-trash action. It writes a separate `trashed_at` timestamp while preserving the required lifecycle status (`draft`, `scheduled`, `published`, or `archived`). The resulting entry is excluded from public reads, archives, sitemap output, and scheduled promotion.
 
-## Errors, Visibility, and Deletion
+Use `PATCH /api/wp/v2/posts/{id}?restore=true` or the equivalent page path to remove the trash timestamp. Use `DELETE /api/wp/v2/posts/{id}?force=true` only after review to permanently remove the record and its taxonomy relations. A forced deletion retains any child page by making it top-level. Repeating an invalid trash/restore transition returns `409 rest_invalid_status`.
 
-Public post and page collections contain only `published` content. Requests for a draft, scheduled, archived, or missing individual entry return HTTP `404` with the WordPress-style body below rather than disclosing the entry’s status or metadata.
+## Errors and Intentional Boundaries
+
+Errors use the WordPress-compatible shape below. Invalid or missing bearer tokens return `401`; scope, role, and ownership denials return `403`; the local development adapter returns `429 rest_rate_limited` after 120 requests per source IP in 60 seconds.
 
 ```json
 {
@@ -65,8 +77,8 @@ Public post and page collections contain only `published` content. Requests for 
 }
 ```
 
-Authentication and capability failures use the same stable shape: `{ "code", "message", "data": { "status" } }`. A missing or invalid bearer token yields `401`; a valid token without the required scope or publication capability yields `403`; development rate limiting returns `429` with `rest_rate_limited`. Unknown methods or resources return `404` with `rest_no_route`.
+Global settings, header/footer menus, controlled custom CSS, theme inspection, plugin activation, and user-role administration are intentionally **not** bearer-token REST resources. They remain administrator-only dashboard procedures because they alter site-wide behavior or the executable-code trust boundary.
 
-`PATCH` and `DELETE /api/wp/v2/posts/{id}` and `/pages/{id}` require a JWT with the `content:write` scope. Authors and contributors may mutate only their own entries; editors and administrators retain publication-wide editorial authority. The default `DELETE` is non-destructive: it sets a separate `trashed_at` timestamp while preserving the original required status (`draft`, `scheduled`, `published`, or `archived`). Trashed entries are excluded from public reads, archives, sitemap delivery, and scheduled-publication promotion.
+## Contract Evidence
 
-Use `PATCH ?restore=true` to restore a trashed entry to its preserved status. Use `DELETE ?force=true` only after review to permanently remove the content and its taxonomy relations; child pages are retained as top-level entries. Default trash responses contain `{ "deleted": false, "trashed": true, "previous": { ... }, "content": { ... } }`, while force deletion returns `{ "deleted": true, "previous": { ... } }`. Missing entries return `rest_post_invalid_id`, a cross-owner mutation returns `cms_forbidden`, and invalid trash transitions return `rest_invalid_status` with HTTP `409`.
+The local HTTP adapter is covered by [`server/cms/wpRest.test.ts`](../server/cms/wpRest.test.ts) and the real-repository lifecycle tests in [`server/cms/realPublication.integration.test.ts`](../server/cms/realPublication.integration.test.ts). Cloudflare Pages resource and user response parity are covered by [`server/cms/cloudflareUsers.test.ts`](../server/cms/cloudflareUsers.test.ts), while the Pages Function remains in [`functions/api/wp/v2/[[path]].ts`](../functions/api/wp/v2/[[path]].ts).

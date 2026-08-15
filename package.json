@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "test:e2e:editor": "CMS_E2E_TEST_AUTH=1 playwright test e2e/editor-modes.spec.ts e2e/media-upload.spec.ts",
+    "test:e2e:editor": "CMS_E2E_TEST_AUTH=1 playwright test e2e/editor-modes.spec.ts e2e/media-upload.spec.ts e2e/admin-critical-path.spec.ts",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "build:pages": "vite build",
     "cf:d1:migrate": "pnpm dlx wrangler d1 execute atelier-cms --remote --file=migrations/0001_cms_core.sql",
