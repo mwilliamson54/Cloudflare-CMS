@@ -28,7 +28,10 @@ const trpcClient = trpc.createClient({
     transformer: superjson,
     headers() {
       const csrfToken = document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(`${CSRF_COOKIE_NAME}=`))?.slice(`${CSRF_COOKIE_NAME}=`.length);
-      const headers: Record<string, string> = csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : {};
+      const headers: Record<string, string> = {
+        ...(csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : {}),
+        ...(import.meta.env.DEV && import.meta.env.VITE_CMS_E2E_TEST_AUTH === "1" ? { "x-cms-e2e-test-auth": "enabled" } : {}),
+      };
       try {
         const raw = sessionStorage.getItem("manus-cookie");
         const token = raw?.split(";").find(part => part.trim().startsWith(`${COOKIE_NAME}=`))?.trim().slice(`${COOKIE_NAME}=`.length);

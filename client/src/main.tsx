@@ -44,7 +44,10 @@ const trpcClient = trpc.createClient({
       transformer: superjson,
       headers() {
         const csrfToken = document.cookie.split(";").map(part => part.trim()).find(part => part.startsWith(`${CSRF_COOKIE_NAME}=`))?.slice(`${CSRF_COOKIE_NAME}=`.length);
-        const headers: Record<string, string> = csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : {};
+        const headers: Record<string, string> = {
+          ...(csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : {}),
+          ...(import.meta.env.DEV && import.meta.env.VITE_CMS_E2E_TEST_AUTH === "1" ? { "x-cms-e2e-test-auth": "enabled" } : {}),
+        };
         // Preview auto-login fallback: when the browser blocks iframe cookies
         // (Safari ITP / private browsing / WebView), the runtime mirrors the
         // session into sessionStorage so we can forward it as a Bearer token.
