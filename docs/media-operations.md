@@ -4,7 +4,9 @@ Atelier CMS stores media bytes in the configured object provider and keeps only 
 
 ## Upload and Retry Behavior
 
-Multi-file uploads are processed sequentially so the client can show accurate remaining-file feedback and avoid overwhelming a free-tier Worker or storage binding. Each file has an isolated error path: a failed file reports its own error and does not discard successfully stored neighboring files. Editors may retry the failed file by selecting or dropping it again; a later replacement preserves the stable media ID used by content references.
+Multi-file uploads are processed sequentially so the client can show accurate remaining-file feedback and avoid overwhelming a free-tier Worker or storage binding. The browser rejects any selected or dropped file outside the server-approved JPEG, PNG, WebP, AVIF, GIF, and PDF MIME allowlist, as well as files larger than 10 MB, before it attempts a request. The server repeats both checks before persistence.
+
+Each file has an isolated error path: a failed file reports its own error and does not discard successfully stored neighboring files. The library keeps a visible per-file queue with reading, uploading, uploaded, and failed states. Reading progress is measured from the browser `FileReader`; upload progress is measured from the actual XMLHttpRequest byte-upload event against the existing authenticated CMS mutation. Failed records expose an in-place retry button that reuses the original selected browser `File`. A later replacement preserves the stable media ID used by content references.
 
 The current upload protocol uses base64 through the authenticated CMS adapter and is intentionally capped at 10 MB. For larger assets or high-volume ingestion, move to presigned/direct R2 multipart uploads before increasing size limits; this avoids passing large payloads through Pages Functions.
 
@@ -16,4 +18,4 @@ When traffic or original-image dimensions justify derivatives, use a controlled 
 
 ## Operational Limits
 
-The media library is paginated and searchable. Metadata fields include original filename, accessible alternative text, caption, title, description, provider, MIME type, size, and stable storage key. Authors should provide alternative text at upload or edit time; the CMS does not infer accessibility metadata. Object deletions are explicit CMS operations, and content references should be reviewed before removal.
+The media library is paginated and searchable. The detail workspace edits accessible alternative text, editorial title, caption, and description, while stored metadata also includes original filename, provider, MIME type, size, and stable storage key. Authors should provide alternative text at upload or edit time; the CMS does not infer accessibility metadata. Object deletions are explicit CMS operations, and content references should be reviewed before removal.

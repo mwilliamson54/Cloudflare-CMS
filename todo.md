@@ -27,8 +27,8 @@
 - [x] Audit the existing CMS end to end and record whether every hardening requirement is already implemented, partial, or absent.
 - [x] Expand user levels to WordPress-style roles: administrator, editor, author, contributor, subscriber, and an optional viewer compatibility role, with explicit least-privilege capabilities.
 - [x] Add administrator-only user management for listing users and changing roles, with safeguards against privilege escalation and self-lockout.
-- [ ] Harden R2-first media storage with an explicit provider abstraction, year/month keys, metadata completeness, server-side validation, thumbnail strategy, and no binary database storage.
-- [ ] Implement drag-and-drop multi-file media uploads with validation, progress, retry, gallery metadata, and detail editing.
+- [x] Harden R2-first media storage with an explicit provider abstraction, year/month keys, metadata completeness, server-side validation, thumbnail strategy, and no binary database storage.
+- [x] Implement drag-and-drop multi-file media uploads with validation, progress, retry, gallery metadata, and detail editing.
 - [x] Implement protected draft previews rendered through the real public theme for posts, pages, scheduled content, and templates.
 - [x] Add visual and source/HTML authoring modes with allowed-HTML sanitization and documented content safety rules.
 - [x] Separate page-specific hierarchy/templates from post-specific archives, taxonomy, author, related-content, and templates.
@@ -66,3 +66,6 @@
 - [x] Enforce author ownership for REST post/page updates and add authenticated REST DELETE behavior with clear permanent-deletion semantics.
 - [x] Document the R2 original-only thumbnail strategy, per-file retry behavior, immutable delivery caching, and future derivative-pipeline boundary.
 - [x] Convert public metadata delivery to SSR or an edge HTML-rewrite path before relying on per-entry SEO and social metadata in initial crawler responses.
+- [x] Add true per-file upload progress reporting in the media queue.
+- [x] Add explicit client-side MIME validation for selected and dropped media files, with regression coverage.
+- [x] Expand the media detail editor to update title and description metadata, with end-to-end coverage.
