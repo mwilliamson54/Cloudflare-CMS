@@ -72,3 +72,9 @@
 - [x] Add integration or browser coverage proving homepage, archive, category, tag, and search reflect publish, archive, trash, and restore lifecycle transitions.
 - [x] Add a critical-path browser test that creates and publishes CMS content, then verifies its public archive/search visibility.
 - [x] Add a browser test for a key administrator configuration path affecting the public shell, such as header menus or plugin activation.
+- [x] Add a graphical block-based rich text editor with H1–H6, paragraphs, ordered/unordered lists, tables, images, iframe embeds, trusted custom widgets, and drag-and-drop reordering.
+- [x] Integrate graphical editor image insertion with the R2 media library, including drag-and-drop upload, media selection, accessible alt text, and persisted block serialization.
+- [x] Add regression coverage for graphical blocks, media insertion, sanitization, and safe iframe/widget handling.
+- [x] Write a complete Cloudflare deployment guide covering D1 migrations and Pages/Worker bindings through both Wrangler TOML configuration and the Cloudflare dashboard.
+- [x] Write a complete CMS reference guide covering architecture, prerequisites, technology stack, features, security, workflows, APIs, Cloudflare implementation, and key design logic.
+- [x] Add authenticated coverage proving a graphical image block selects existing media or uploads/drops a new image into the R2-backed library, then preserves alternative text and caption in saved graphical content.

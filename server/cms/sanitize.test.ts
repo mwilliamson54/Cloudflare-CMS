@@ -12,4 +12,12 @@ describe("source-mode HTML sanitizer", () => {
     expect(clean).toContain('<h2>Title</h2>');
     expect(clean).toContain('rel="noopener noreferrer"');
   });
+
+  it("retains tables and normalizes trusted embeds while rejecting untrusted frame sources", () => {
+    const trusted = sanitizeRichHtml('<table><tr><th>Column</th></tr><tr><td>Value</td></tr></table><iframe src="https://www.youtube-nocookie.com/embed/abc" title="Film" onload="alert(1)"></iframe>');
+    expect(trusted).toContain("<table><tr><th>Column</th></tr><tr><td>Value</td></tr></table>");
+    expect(trusted).toContain('src="https://www.youtube-nocookie.com/embed/abc"');
+    expect(trusted).toContain('sandbox="allow-scripts allow-same-origin allow-presentation"');
+    expect(sanitizeRichHtml('<iframe src="https://evil.example/embed"></iframe>')).toBeNull();
+  });
 });
