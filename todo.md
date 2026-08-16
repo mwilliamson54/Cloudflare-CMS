@@ -123,7 +123,8 @@
 - [x] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
 - [x] Fix the live `/admin` production TypeError `Invalid URL`, then redeploy and verify the Cloudflare login shell and protected-route behavior.
 
-- [ ] Re-enable the Cloudflare management connector needed to bootstrap the supplied production administrator and complete authenticated persistence validation.
-- [ ] Make the guarded production bootstrap route able to initialize the password for the explicitly requested existing administrator email using the one-time secret, then remove the secret after successful use.
-- [ ] Align the Cloudflare Pages tRPC adapter with the client’s SuperJSON transformer so Date-valued create/update responses deserialize correctly in production.
-- [ ] Fix the production media library crash caused by the Pages media-list response shape not matching the dashboard client contract, then retest R2-backed media operations.
+- [x] Re-enable the Cloudflare management connector needed to bootstrap the supplied production administrator and complete authenticated persistence validation.
+- [x] Make the guarded production bootstrap route able to initialize the password for the explicitly requested existing administrator email using the one-time secret, then remove the secret after successful use.
+- [x] Align the Cloudflare Pages tRPC adapter with the client’s SuperJSON transformer so Date-valued create/update responses deserialize correctly in production.
+- [x] Fix the production media library crash caused by the Pages media-list response shape not matching the dashboard client contract, then retest R2-backed media operations.
+- [ ] Align the Cloudflare Pages settings.update procedure with the full publication-settings payload used by the production dashboard, then verify D1-backed settings persistence.
