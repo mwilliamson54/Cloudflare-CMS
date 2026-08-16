@@ -23,7 +23,7 @@
     }
   ],
   "vars": {
-    "CMS_ORIGIN": "https://example.com",
+    "CMS_ORIGIN": "https://atelier-cms.pages.dev",
     "CMS_TOKEN_TTL_SECONDS": "2592000"
   }
 }
