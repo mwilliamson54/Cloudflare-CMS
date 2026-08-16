@@ -24,7 +24,7 @@ export type AuthEnv = {
 export const SESSION_COOKIE = "cms_session";
 export const CSRF_COOKIE = "cms_csrf_token";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
-const PASSWORD_ITERATIONS = 210_000;
+const PASSWORD_ITERATIONS = 100_000;
 const encoder = new TextEncoder();
 
 const bytesToBase64Url = (bytes: Uint8Array) => {
