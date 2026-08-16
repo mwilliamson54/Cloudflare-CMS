@@ -78,3 +78,8 @@
 - [x] Write a complete Cloudflare deployment guide covering D1 migrations and Pages/Worker bindings through both Wrangler TOML configuration and the Cloudflare dashboard.
 - [x] Write a complete CMS reference guide covering architecture, prerequisites, technology stack, features, security, workflows, APIs, Cloudflare implementation, and key design logic.
 - [x] Add authenticated coverage proving a graphical image block selects existing media or uploads/drops a new image into the R2-backed library, then preserves alternative text and caption in saved graphical content.
+- [ ] Audit the existing Cloudflare account, repository, and deployment artifacts against the supplied production deployment instructions without changing persistent production data.
+- [ ] Prepare a non-destructive D1 migration, R2/KV binding, secret, and scheduler deployment plan using persistent production resource identifiers.
+- [ ] Verify the GitHub production branch, Pages build configuration, Functions packaging, and deployment data-persistence safeguards.
+- [ ] Produce a deployment-readiness report and obtain explicit confirmation before any external Cloudflare production change.
+- [ ] Provide the final live URL and post-deployment validation checklist after the user performs the publish action.
