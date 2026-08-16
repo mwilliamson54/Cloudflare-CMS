@@ -12,7 +12,7 @@ No production database, bucket, namespace, DNS record, GitHub branch, or deploym
 
 | Area | Finding | Consequence |
 | --- | --- | --- |
-| GitHub | `mwilliamson54/Cloudflare-CMS` is public and now contains the tested source on `main` at commit `133de42c60036719a4b3bf3a55fe741849522509`. | Cloudflare Pages Git integration still needs to be connected and verified; source synchronization itself is complete. |
+| GitHub | `mwilliamson54/Cloudflare-CMS` is public and now contains the tested source on `main` at commit `c1ec5e1cd37085f4892e1f594c09627be767255f`. The current tree contains no tracked env files, database files, logs, build outputs, coverage, private keys, or `client/public/__manus__/` artifacts. | Cloudflare Pages Git integration still needs to be connected and verified. The historical Git commit graph contains the removed Manus debug collector path; it is absent from the current tree but has not been force-removed from public history. |
 | Local Git | Tested source is on local `main` at checkpoint `b66c271f`; only the local tracker had an uncommitted change during the audit. | A deliberate source-publication step is still required; do not publish blindly. |
 | D1 | Connected account inventory returned zero databases. | There is no existing production CMS D1 to preserve or migrate into. |
 | R2 | Account API returned Cloudflare error 10042: R2 must be enabled in the Cloudflare Dashboard. | R2 bucket creation and media persistence cannot proceed until the account feature is enabled. |
@@ -60,7 +60,11 @@ The only verified live URL in this task is the Manus development preview. No Clo
 
 ## Conclusion
 
-The source project is ready for a controlled Cloudflare deployment after the production admin/authentication path and account resources are resolved. The safe next action is not to create an empty deployment; it is to close the authentication and R2/D1 provisioning gates, then perform the documented non-destructive release and persistence tests.
+The source project is ready for a controlled Cloudflare deployment after the full Pages admin adapter and account resources are resolved. The current GitHub tip is clean of the audited runtime artifacts, but the removed debug collector remains in historical public commits. The safe next action is not to create an empty deployment; it is to close the authentication and R2/D1 provisioning gates, decide whether historical rewrite is required, then perform the documented non-destructive release and persistence tests.
+
+## Pre-push Review Procedure
+
+Before every public source synchronization, inspect the full current tree and commit history for environment files, database exports, logs, build output, coverage, local project configuration, runtime debug assets, private-key markers, and provider credentials. Review `git status`, `git ls-files`, `git log --all --name-only`, and a bounded content scan before pushing. If a sensitive artifact appears in history, remove it from the current tree immediately, rotate any exposed credential, and obtain explicit approval before a force-rewrite of the public branch; a normal cleanup commit does not erase historical public data.
 
 ## Related Documents
 
