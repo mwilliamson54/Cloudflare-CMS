@@ -15,7 +15,7 @@ type CloudflareUser = {
   role: string;
 };
 
-const isCloudflareAuth = () => import.meta.env.VITE_CMS_AUTH_MODE === "cloudflare";
+const isCloudflareAuth = () => import.meta.env.VITE_CMS_AUTH_MODE === "cloudflare" || (import.meta.env.PROD && typeof window !== "undefined" && window.location.hostname.endsWith(".pages.dev"));
 const csrfCookie = () => document.cookie.split(";").map(value => value.trim()).find(value => value.startsWith("cms_csrf_token="))?.slice("cms_csrf_token=".length) ?? "";
 
 export function useAuth(options?: UseAuthOptions) {

@@ -121,3 +121,4 @@
 - [ ] Perform live Pages smoke tests and the required second-revision persistence test.
 - [ ] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.
 - [ ] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
+- [ ] Fix the live `/admin` production TypeError `Invalid URL`, then redeploy and verify the Cloudflare login shell and protected-route behavior.
