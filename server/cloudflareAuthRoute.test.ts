@@ -14,6 +14,7 @@ function makeEnv() {
           bind(...values: unknown[]) {
             return {
               async first<T>() {
+                if (query.includes("SELECT id,email FROM users WHERE role='admin'")) return (users.find(user => user.role === "admin") ?? null) as T;
                 if (query.includes("SELECT id FROM users WHERE role='admin'")) return (users.find(user => user.role === "admin") ?? null) as T;
                 if (query.includes("SELECT id,email,name,role,password_hash FROM users")) return (users.find(user => String(user.email).toLowerCase() === String(values[0]).toLowerCase()) ?? null) as T;
                 if (query.includes("SELECT s.id")) {
@@ -30,6 +31,10 @@ function makeEnv() {
                 if (query.startsWith("UPDATE auth_sessions")) {
                   const session = sessions.find(item => item.id === values[0]);
                   if (session) session.revoked_at = new Date().toISOString();
+                }
+                if (query.startsWith("UPDATE users SET name=?, password_hash=?")) {
+                  const user = users.find(item => item.id === values[2]);
+                  if (user) { user.name = values[0]; user.password_hash = values[1]; }
                 }
               },
             };
@@ -54,6 +59,18 @@ function cookiePair(response: Response) {
 }
 
 describe("Cloudflare production auth routes", () => {
+  it("initializes the password for the explicitly matched existing administrator", async () => {
+    const env = makeEnv();
+    const first = await onRequest(context(env, "bootstrap", jsonRequest("https://cms.example/api/auth/bootstrap", "POST", { bootstrapSecret: "one-time-bootstrap-secret", email: "admin@example.com", name: "Admin", password: "correct horse battery staple" })) as never);
+    expect(first.status).toBe(201);
+    const reset = await onRequest(context(env, "bootstrap", jsonRequest("https://cms.example/api/auth/bootstrap", "POST", { bootstrapSecret: "one-time-bootstrap-secret", email: "admin@example.com", name: "Admin Updated", password: "another correct password" })) as never);
+    expect(reset.status).toBe(200);
+    const login = await onRequest(context(env, "login", jsonRequest("https://cms.example/api/auth/login", "POST", { email: "admin@example.com", password: "another correct password" })) as never);
+    expect(login.status).toBe(200);
+    const rejectedOther = await onRequest(context(env, "bootstrap", jsonRequest("https://cms.example/api/auth/bootstrap", "POST", { bootstrapSecret: "one-time-bootstrap-secret", email: "other@example.com", password: "another correct password" })) as never);
+    expect(rejectedOther.status).toBe(409);
+  });
+
   it("bootstraps once, logs in, exposes the session, and requires CSRF on logout", async () => {
     const env = makeEnv();
     const bootstrapResponse = await onRequest(context(env, "bootstrap", jsonRequest("https://cms.example/api/auth/bootstrap", "POST", { bootstrapSecret: "one-time-bootstrap-secret", email: "admin@example.com", name: "Admin", password: "correct horse battery staple" })) as never);

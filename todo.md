@@ -122,3 +122,6 @@
 - [x] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.
 - [x] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
 - [x] Fix the live `/admin` production TypeError `Invalid URL`, then redeploy and verify the Cloudflare login shell and protected-route behavior.
+
+- [ ] Re-enable the Cloudflare management connector needed to bootstrap the supplied production administrator and complete authenticated persistence validation.
+- [ ] Make the guarded production bootstrap route able to initialize the password for the explicitly requested existing administrator email using the one-time secret, then remove the secret after successful use.

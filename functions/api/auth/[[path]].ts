@@ -15,13 +15,17 @@ async function bootstrap(request: Request, env: AuthEnv) {
   const body = await getBody(request);
   const suppliedSecret = stringField(body, "bootstrapSecret");
   if (!suppliedSecret || (await sha256(suppliedSecret)) !== (await sha256(env.CMS_AUTH_BOOTSTRAP_SECRET))) return json({ code: "forbidden" }, { status: 403 });
-  const existingAdmin = await env.CMS_DB.prepare("SELECT id FROM users WHERE role='admin' LIMIT 1").bind().first<{ id: number }>();
-  if (existingAdmin) return json({ code: "bootstrap_already_completed" }, { status: 409 });
+  const existingAdmin = await env.CMS_DB.prepare("SELECT id,email FROM users WHERE role='admin' LIMIT 1").bind().first<{ id: number; email?: string | null }>();
   const email = stringField(body, "email").toLowerCase();
   const name = stringField(body, "name") || "Administrator";
   const password = stringField(body, "password");
   if (!/^\S+@\S+\.\S+$/.test(email) || password.length < 12) return json({ code: "invalid_input", message: "A valid email and a password of at least 12 characters are required" }, { status: 400 });
   const passwordHash = await hashPassword(password);
+  if (existingAdmin) {
+    if (String(existingAdmin.email ?? "").toLowerCase() !== email) return json({ code: "bootstrap_already_completed" }, { status: 409 });
+    await env.CMS_DB.prepare("UPDATE users SET name=?, password_hash=? WHERE id=?").bind(name.slice(0, 200), passwordHash, existingAdmin.id).run();
+    return json({ ok: true, message: "Administrator password initialized. Remove CMS_AUTH_BOOTSTRAP_SECRET after use." });
+  }
   try {
     await env.CMS_DB.prepare("INSERT INTO users (email,name,password_hash,role) VALUES (?,?,?,'admin')").bind(email, name.slice(0, 200), passwordHash).run();
   } catch {
