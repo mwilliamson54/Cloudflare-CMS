@@ -38,3 +38,5 @@ The optional scheduler Worker uses `*/5 * * * *` and the same D1 database. Deplo
 ## Explicit safeguards
 
 D1, R2, and KV were provisioned in the refreshed account after the user’s deployment request and are recorded above. The unrelated existing Pages project was not modified. The Atelier Pages project is created and bound to the stable resources; its first GitHub deployment is now pending/needs triggering from the verified `main` branch. A second deployment must prove that content, sessions, media metadata, and menus survive without recreating or replacing D1/R2 resources.
+
+The Pages build command is `pnpm build:pages`, and its verified Vite output is `dist/public`; `client/dist` is not a valid deployment directory for this repository.
