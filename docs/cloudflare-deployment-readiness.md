@@ -12,14 +12,14 @@ No production database, bucket, namespace, DNS record, GitHub branch, or deploym
 
 | Area | Finding | Consequence |
 | --- | --- | --- |
-| GitHub | `mwilliamson54/Cloudflare-CMS` exists, is public, has `main` metadata, but currently has size 0 and no listed branches/content. | The tested local source is not yet connected to a populated GitHub production branch. |
+| GitHub | `mwilliamson54/Cloudflare-CMS` is public and now contains the tested source on `main` at commit `133de42c60036719a4b3bf3a55fe741849522509`. | Cloudflare Pages Git integration still needs to be connected and verified; source synchronization itself is complete. |
 | Local Git | Tested source is on local `main` at checkpoint `b66c271f`; only the local tracker had an uncommitted change during the audit. | A deliberate source-publication step is still required; do not publish blindly. |
 | D1 | Connected account inventory returned zero databases. | There is no existing production CMS D1 to preserve or migrate into. |
 | R2 | Account API returned Cloudflare error 10042: R2 must be enabled in the Cloudflare Dashboard. | R2 bucket creation and media persistence cannot proceed until the account feature is enabled. |
 | KV | Connected account inventory returned zero namespaces. | KV is not currently available as a persistent CMS namespace. The current public read path is intentionally safe without KV. |
 | Pages Functions | Repository contains `functions/[[path]].ts`, REST, media, sitemap, and robots Functions. | Public/REST delivery artifacts exist. |
 | Administration | Local admin tRPC is mounted by `server/_core/index.ts` at `/api/trpc`; no corresponding Pages Function is present. | The current `/admin` dashboard cannot be declared production-functional on Pages. |
-| Authentication | Cloudflare Pages now includes PBKDF2 password verification, D1-backed `auth_sessions`, secure session/CSRF cookies, bootstrap, login, session inspection, and logout routes under `/api/auth/*`; the development-only E2E fixture remains denied outside development. | A production-compatible identity can now be bootstrapped, but the full dashboard still requires a Pages-compatible tRPC/admin mutation adapter before `/admin` is production-functional. |
+| Authentication | Cloudflare Pages now includes PBKDF2 password verification, D1-backed `auth_sessions`, secure session/CSRF cookies, bootstrap, login, session inspection, and logout routes under `/api/auth/*`; 7 focused auth tests cover hashing, session lookup, bootstrap, login, CSRF, and logout. | A production-compatible identity can now be bootstrapped, but the full dashboard still requires a Pages-compatible tRPC/admin mutation adapter before `/admin` is production-functional. |
 | Secrets | `.gitignore` excludes `.env*`, database files, logs, and runtime artifacts; no tracked environment/database secret files were found. | Source can be prepared without intentionally committing local secrets, subject to a final review before publication. |
 
 ## Why Deployment Was Not Triggered
