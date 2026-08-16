@@ -119,3 +119,4 @@
 - [x] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
 - [ ] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene.
 - [ ] Perform live Pages smoke tests and the required second-revision persistence test.
+- [ ] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.

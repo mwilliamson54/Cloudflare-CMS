@@ -15,8 +15,8 @@
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "build:pages": "vite build",
     "cf:d1:migrate": "pnpm dlx wrangler d1 execute atelier-cms --remote --file=migrations/0001_cms_core.sql",
-    "cf:pages:dev": "pnpm dlx wrangler pages dev client/dist --d1=CMS_DB --r2=CMS_MEDIA --kv=CMS_CACHE",
-    "cf:pages:deploy": "pnpm dlx wrangler pages deploy client/dist --project-name atelier-cms"
+    "cf:pages:dev": "pnpm dlx wrangler pages dev dist/public --d1=CMS_DB --r2=CMS_MEDIA --kv=CMS_CACHE",
+    "cf:pages:deploy": "pnpm dlx wrangler pages deploy dist/public --project-name atelier-cms"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",

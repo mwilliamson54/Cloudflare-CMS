@@ -1,6 +1,6 @@
 # Atelier CMS Production Resource Plan
 
-This plan is intentionally non-destructive. It records the exact resources and binding contract required by the current source without creating, replacing, or mutating Cloudflare resources.
+This plan records the exact resources and binding contract required by the current source. Resource creation was performed only after the user requested deployment; subsequent configuration changes remain non-destructive.
 
 ## Current account state
 
@@ -13,7 +13,7 @@ The refreshed verified account is `d20c68056ef972d805bd177e2a0ab145`. It now con
 | D1 database | `atelier-cms` | `CMS_DB` | `d79481e3-a539-4c79-9cdb-3b8f4ae3cb65` |
 | R2 bucket | `atelier-cms-media` | `CMS_MEDIA` | `atelier-cms-media` in Pages Functions binding; provisioned in WEUR |
 | KV namespace | `atelier-cms-cache` | `CMS_CACHE` | `0ba1110d7669485ea698bb60dc538be8` |
-| Pages project | `atelier-cms` | Pages Functions | Project ID `b47fe04b-f35b-4db6-8055-b0ceba561753`; `https://atelier-cms.pages.dev`; GitHub `mwilliamson54/Cloudflare-CMS`, branch `main`, build output `client/dist`, Functions under `functions/` |
+| Pages project | `atelier-cms` | Pages Functions | Project ID `b47fe04b-f35b-4db6-8055-b0ceba561753`; `https://atelier-cms.pages.dev`; GitHub `mwilliamson54/Cloudflare-CMS`, branch `main`, build output `dist/public`, Functions under `functions/` |
 
 ## Migration order
 

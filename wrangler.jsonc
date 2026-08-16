@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "atelier-cms",
   "compatibility_date": "2026-08-14",
-  "pages_build_output_dir": "client/dist",
+  "pages_build_output_dir": "dist/public",
   "d1_databases": [
     {
       "binding": "CMS_DB",
