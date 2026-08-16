@@ -80,6 +80,8 @@
 - [x] Add authenticated coverage proving a graphical image block selects existing media or uploads/drops a new image into the R2-backed library, then preserves alternative text and caption in saved graphical content.
 - [x] Audit the existing Cloudflare account, repository, and deployment artifacts against the supplied production deployment instructions without changing persistent production data.
 - [ ] Prepare a non-destructive D1 migration, R2/KV binding, secret, and scheduler deployment plan using persistent production resource identifiers.
+- [x] Draft the non-destructive production resource and binding plan with explicit placeholders and no-create safeguards.
+- [ ] Replace the plan placeholders with actual D1, R2, KV, and Pages identifiers after approved resource creation and verify them against live bindings.
 - [ ] Verify the GitHub production branch, Pages build configuration, Functions packaging, and deployment data-persistence safeguards.
 - [x] Produce a deployment-readiness report and obtain explicit confirmation before any external Cloudflare production change.
 - [ ] Provide the final live URL and post-deployment validation checklist after the user performs the publish action.
