@@ -99,3 +99,5 @@
 - [x] Document and verify a complete pre-push review procedure covering runtime artifacts, local config, logs, generated files, database exports, and historical commits.
 - [x] Integrate the client auth hook and login/logout UX with `/api/auth/*` only when the Cloudflare production auth provider is enabled, while preserving the local Manus OAuth path for development.
 - [ ] Port or replace the dashboard’s tRPC mutations with Pages-compatible D1/R2 procedures before calling the Cloudflare admin experience production-ready.
+- [ ] Add client/browser regression coverage for successful Cloudflare login, failed credentials, unauthenticated admin redirect, and logout cookie/session revocation.
+- [ ] Port the remaining dashboard tRPC procedure families to D1/R2 behind the Pages adapter: content lifecycle, taxonomies, media, settings, menus, users, tokens, SEO, themes, and plugins.

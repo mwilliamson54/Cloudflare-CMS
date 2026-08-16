@@ -82,3 +82,9 @@ The adapter intentionally returns a typed `NOT_IMPLEMENTED` tRPC error for dashb
 ## Cloudflare Login UX
 
 When `VITE_CMS_AUTH_MODE=cloudflare` is supplied at frontend build time, the client uses `/api/auth/me` for session inspection and `/api/auth/logout` for sign-out. Unauthenticated protected routes redirect to `/login`, where the graphical login form posts credentials to `/api/auth/login` and navigates back to `/admin` after a successful response. The default development build leaves the existing Manus OAuth/tRPC path unchanged. Production Pages configuration must set the build-time mode deliberately; it is not enabled implicitly.
+
+## D1 Dashboard Adapter Progress
+
+The Pages tRPC adapter now contains real D1-backed procedures for content listing, retrieval, creation, update, soft-trash, restore, categories, tags, and site settings. Content mutations enforce the production session, double-submit CSRF, role capabilities, author ownership, publish-role restrictions, and trash-state rules. Direct caller regression coverage proves draft creation, trash/restore transitions, and contributor publishing denial.
+
+This is an incremental adapter milestone. Media/R2 uploads, menus, users, API tokens, SEO reporting, appearance, plugins, and the remaining dashboard-specific procedure contracts still require explicit D1/R2 implementations and tests before `/admin` can be considered production-ready on Pages.
