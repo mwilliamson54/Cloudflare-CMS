@@ -23,7 +23,7 @@ async function bootstrap(request: Request, env: AuthEnv) {
   const passwordHash = await hashPassword(password);
   if (existingAdmin) {
     if (String(existingAdmin.email ?? "").toLowerCase() !== email) return json({ code: "bootstrap_already_completed" }, { status: 409 });
-    await env.CMS_DB.prepare("UPDATE users SET name=?, password_hash=? WHERE id=?").bind(name.slice(0, 200), passwordHash, existingAdmin.id).run();
+    await env.CMS_DB.prepare("UPDATE users SET password_hash=? WHERE lower(email)=?").bind(passwordHash, email).run();
     return json({ ok: true, message: "Administrator password initialized. Remove CMS_AUTH_BOOTSTRAP_SECRET after use." });
   }
   try {

@@ -32,9 +32,9 @@ function makeEnv() {
                   const session = sessions.find(item => item.id === values[0]);
                   if (session) session.revoked_at = new Date().toISOString();
                 }
-                if (query.startsWith("UPDATE users SET name=?, password_hash=?")) {
-                  const user = users.find(item => item.id === values[2]);
-                  if (user) { user.name = values[0]; user.password_hash = values[1]; }
+                if (query.startsWith("UPDATE users SET password_hash=? WHERE lower(email)=?")) {
+                  const user = users.find(item => String(item.email).toLowerCase() === String(values[1]).toLowerCase());
+                  if (user) user.password_hash = values[0];
                 }
               },
             };
