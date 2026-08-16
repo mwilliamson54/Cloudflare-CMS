@@ -18,6 +18,7 @@ export type AuthDb = {
 export type AuthEnv = {
   CMS_DB: AuthDb;
   CMS_AUTH_BOOTSTRAP_SECRET?: string;
+  JWT_SECRET?: string;
 };
 
 export const SESSION_COOKIE = "cms_session";

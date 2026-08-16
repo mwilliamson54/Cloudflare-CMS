@@ -90,7 +90,7 @@
 - [x] Implement or approve a production Cloudflare-compatible admin authentication and tRPC backend path before exposing `/admin` publicly.
 - [ ] Enable R2 and provision persistent production D1, R2, and optional KV resources only after the production architecture and authentication gates are approved.
 - [x] Design a Cloudflare-compatible production admin identity, session, CSRF, and authorization contract without enabling the development-only E2E fixture.
-- [ ] Implement the production authentication/session backend and Pages-compatible admin/tRPC mutation routes.
+- [x] Implement the production authentication/session backend and Pages-compatible admin/tRPC mutation routes.
 - [ ] Add regression tests for production login/session expiry, CSRF, role capabilities, admin mutations, and public/private cache boundaries.
 - [ ] Prepare persistent Cloudflare resource bindings and migration configuration using stable production identifiers without creating replacements per deploy.
 - [ ] Synchronize the validated CMS source and documentation to `mwilliamson54/Cloudflare-CMS` on `main` without committing secrets or runtime data.
@@ -98,9 +98,16 @@
 - [ ] Audit the published GitHub repository contents and full commit history for tracked runtime artifacts, secrets, local configuration, logs, generated outputs, and database files; remove any findings and re-verify `main`.
 - [x] Document and verify a complete pre-push review procedure covering runtime artifacts, local config, logs, generated files, database exports, and historical commits.
 - [x] Integrate the client auth hook and login/logout UX with `/api/auth/*` only when the Cloudflare production auth provider is enabled, while preserving the local Manus OAuth path for development.
-- [ ] Port or replace the dashboard’s tRPC mutations with Pages-compatible D1/R2 procedures before calling the Cloudflare admin experience production-ready.
+- [x] Port or replace the dashboard’s tRPC mutations with Pages-compatible D1/R2 procedures before calling the Cloudflare admin experience production-ready.
 - [ ] Add client/browser regression coverage for successful Cloudflare login, failed credentials, unauthenticated admin redirect, and logout cookie/session revocation.
-- [ ] Port the remaining dashboard tRPC procedure families to D1/R2 behind the Pages adapter: content lifecycle, taxonomies, media, settings, menus, users, tokens, SEO, themes, and plugins.
+- [x] Add mocked browser coverage for Cloudflare login, failed credentials, protected redirect, and logout UX.
+- [x] Add non-mocked route-level coverage proving real logout clears the auth cookie/session and subsequent `/api/auth/me` returns 401.
+- [ ] Add a real-backend browser regression for `/api/auth/login`, `/api/auth/me`, and `/api/auth/logout` cookie/session behavior; the current Playwright coverage intentionally mocks these endpoints.
+- [ ] Verify Pages adapter parity for appearance, editor blocks, content types, and every procedure used by the real admin client.
+- [ ] Produce an explicit admin-client-to-Pages-adapter parity matrix and exhaustive regression coverage for every real admin procedure call.
+- [x] Produce an explicit admin-client-to-Pages-adapter procedure-name parity matrix covering all discovered CMS admin calls.
+- [ ] Add browser coverage for Cloudflare-authenticated admin login, redirect, logout, and representative D1/R2 mutations.
+- [x] Port the remaining dashboard tRPC procedure families to D1/R2 behind the Pages adapter: content lifecycle, taxonomies, media, settings, menus, users, tokens, SEO, themes, and plugins.
 - [x] Port Pages-compatible D1/R2 procedures for content, taxonomies, media, settings, menus, users, API-token list/revoke, themes, and plugins.
-- [ ] Remove remaining `NOT_IMPLEMENTED` admin procedures (`cms.bootstrap` and API-token issuance) from the Pages adapter before production exposure.
-- [ ] Port the remaining SEO reporting procedures and Cloudflare-native API-token issuance procedure to the Pages adapter.
+- [x] Remove remaining `NOT_IMPLEMENTED` admin procedures (`cms.bootstrap` and API-token issuance) from the Pages adapter before production exposure.
+- [x] Port the remaining SEO reporting procedures and Cloudflare-native API-token issuance procedure to the Pages adapter.
