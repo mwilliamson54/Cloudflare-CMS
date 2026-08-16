@@ -7,7 +7,7 @@
     {
       "binding": "CMS_DB",
       "database_name": "atelier-cms",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+      "database_id": "d79481e3-a539-4c79-9cdb-3b8f4ae3cb65"
     }
   ],
   "triggers": {

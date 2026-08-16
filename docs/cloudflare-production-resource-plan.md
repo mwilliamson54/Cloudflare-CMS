@@ -4,16 +4,16 @@ This plan is intentionally non-destructive. It records the exact resources and b
 
 ## Current account state
 
-The verified account inventory for account `a2ae0c48e84a82b2f81082e677483e3f` contains no D1 databases, no KV namespaces, and no Pages projects. The R2 inventory call is blocked with Cloudflare error 10042 because R2 must first be enabled in the Cloudflare Dashboard. Consequently, stable resource identifiers are not yet available and the resource-creation steps must remain manual/approved.
+The refreshed verified account is `d20c68056ef972d805bd177e2a0ab145`. It now contains the provisioned Atelier resources listed below. The account also contains an unrelated Pages project, `mrx-app-builder`; it is not reused or modified.
 
 ## Required resources and stable bindings
 
 | Resource | Intended name | Binding | Identifier required in deployment |
 | --- | --- | --- | --- |
-| D1 database | `atelier-cms` | `CMS_DB` | `database_id` inserted into `wrangler.jsonc` and `wrangler.scheduler.jsonc` |
-| R2 bucket | `atelier-cms-media` | `CMS_MEDIA` | bucket name in Pages Functions binding; R2 must be enabled first |
-| KV namespace | `atelier-cms-cache` | `CMS_CACHE` | namespace ID inserted into `wrangler.jsonc`; optional for the current safe public path |
-| Pages project | `atelier-cms` | Pages Functions | GitHub `main` branch, build output `client/dist`, Functions under `functions/` |
+| D1 database | `atelier-cms` | `CMS_DB` | `d79481e3-a539-4c79-9cdb-3b8f4ae3cb65` |
+| R2 bucket | `atelier-cms-media` | `CMS_MEDIA` | `atelier-cms-media` in Pages Functions binding; provisioned in WEUR |
+| KV namespace | `atelier-cms-cache` | `CMS_CACHE` | `0ba1110d7669485ea698bb60dc538be8` |
+| Pages project | `atelier-cms` | Pages Functions | Pending creation; GitHub `mwilliamson54/Cloudflare-CMS`, branch `main`, build output `client/dist`, Functions under `functions/` |
 
 ## Migration order
 
@@ -37,4 +37,4 @@ The optional scheduler Worker uses `*/5 * * * *` and the same D1 database. Deplo
 
 ## Explicit safeguards
 
-No resource was created or mutated while this plan was prepared. The plan cannot be completed with live identifiers until R2 is enabled, resources are created with user approval, GitHub access is restored, and the intended Pages project is confirmed. A second deployment must prove that content, sessions, media metadata, and menus survive without recreating or replacing D1/R2 resources.
+D1, R2, and KV were provisioned in the refreshed account after the user’s deployment request and are recorded above. The unrelated existing Pages project was not modified. The Atelier Pages project still must be created against the verified GitHub repository, and a second deployment must prove that content, sessions, media metadata, and menus survive without recreating or replacing D1/R2 resources.

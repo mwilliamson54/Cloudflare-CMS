@@ -113,3 +113,9 @@
 - [x] Port Pages-compatible D1/R2 procedures for content, taxonomies, media, settings, menus, users, API-token list/revoke, themes, and plugins.
 - [x] Remove remaining `NOT_IMPLEMENTED` admin procedures (`cms.bootstrap` and API-token issuance) from the Pages adapter before production exposure.
 - [x] Port the remaining SEO reporting procedures and Cloudflare-native API-token issuance procedure to the Pages adapter.
+
+- [ ] Re-verify refreshed Cloudflare access for R2, D1, KV, Pages, and refreshed GitHub access before deployment changes.
+- [ ] Provision or confirm stable production D1, R2, KV, and Pages resources after prerequisite verification.
+- [ ] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
+- [ ] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene.
+- [ ] Perform live Pages smoke tests and the required second-revision persistence test.
