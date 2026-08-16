@@ -274,3 +274,29 @@ Then sign into `/admin`, create a draft, upload a small WebP image, and confirm 
 [1]: https://developers.cloudflare.com/pages/functions/wrangler-configuration/ "Cloudflare Pages Functions — Wrangler configuration"
 [2]: https://developers.cloudflare.com/pages/functions/bindings/ "Cloudflare Pages Functions — Bindings"
 [3]: https://developers.cloudflare.com/d1/reference/migrations/ "Cloudflare D1 — Migrations"
+
+## Production Admin Authentication on Pages
+
+The Cloudflare build now includes an additive `migrations/0005_auth_sessions.sql` migration and a Pages Function at `/api/auth/*`. The route provides one-time administrator bootstrap, password login, session inspection, and CSRF-protected logout. Passwords use salted PBKDF2-SHA-256 records; browser sessions use an HttpOnly `cms_session` cookie plus a non-HttpOnly `cms_csrf_token` double-submit cookie. Sessions are stored in D1 and expire after seven days unless revoked.
+
+Apply migration `0005_auth_sessions.sql` only after the preceding migrations have been applied in order. Configure `CMS_AUTH_BOOTSTRAP_SECRET` as a Cloudflare Pages production secret, use it once to create the first administrator, and remove or rotate it immediately afterward. Never place this value in `wrangler.jsonc`, GitHub, client code, or a public build log.
+
+The auth/session backend is production-oriented, but the current repository still needs the complete Pages-compatible adapter for the local Express/tRPC administration procedures before the full `/admin` dashboard can be declared production-functional. Do not expose the dashboard publicly until those procedures are available under Pages and verified against the same D1 binding.
+
+Example first-admin bootstrap request after the migration and secret are configured:
+
+```bash
+curl -X POST https://YOUR-PAGES-DOMAIN.example/api/auth/bootstrap \
+  -H 'content-type: application/json' \
+  --data '{"bootstrapSecret":"REDACTED","email":"admin@example.com","name":"Administrator","password":"REPLACE_WITH_A_12_CHARACTER_PASSWORD"}'
+```
+
+Then test login without printing the returned cookies to shared logs:
+
+```bash
+curl -i -c cookies.txt -X POST https://YOUR-PAGES-DOMAIN.example/api/auth/login \
+  -H 'content-type: application/json' \
+  --data '{"email":"admin@example.com","password":"REPLACE_WITH_A_12_CHARACTER_PASSWORD"}'
+```
+
+The current implementation is intentionally additive and does not modify existing content, media, taxonomy, settings, or token records. The production release gate remains: **same D1 binding, R2 enabled and bound, authentication verified, complete admin adapter verified, then publish**.
