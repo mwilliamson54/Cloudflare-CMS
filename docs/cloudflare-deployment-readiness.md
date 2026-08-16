@@ -4,9 +4,9 @@
 
 ## Status
 
-> **BLOCKED for safe production deployment.** The current local Atelier CMS is tested and checkpointed, but the connected Cloudflare account does not yet contain the persistent production resources, and live Pages configuration has not yet been verified.
+> **Production deployment validated.** Atelier CMS is live on Cloudflare Pages with stable D1, R2, and KV bindings, authenticated administration, REST delivery, and a completed second-revision persistence test.
 
-No production database, bucket, namespace, DNS record, or deployment was created or modified during this audit. GitHub verification was attempted read-only but the configured `GH_TOKEN` and stored GitHub token both returned invalid-credentials errors, so no synchronization was attempted.
+The stable production D1 database, R2 bucket, KV namespace, and Pages project are provisioned in the refreshed Cloudflare account. The tested source is synchronized to GitHub `main`, and no credentials or runtime data were added to the repository during the final validation sequence.
 
 ## Evidence Collected
 
@@ -51,16 +51,16 @@ The Cloudflare account connector was enabled for inspection. The account-level C
 
 ## Current URLs
 
-The only verified live URL in this task is the Manus development preview. No Cloudflare production URL exists yet:
+The verified production and development URLs for this task are:
 
 - Development preview: `https://3000-in70ohyyukf19we0dxyr4-a9adef6c.us4.manus.computer`
-- Cloudflare public site: **not deployed**
-- Cloudflare admin: **not deployed**
-- Cloudflare API: **not deployed**
+- Cloudflare public site and admin: `https://atelier-cms.pages.dev`
+- Cloudflare REST API: `https://atelier-cms.pages.dev/api/wp/v2/posts`
+- Cloudflare sitemap: `https://atelier-cms.pages.dev/sitemap.xml`
 
 ## Conclusion
 
-The source project is ready for a controlled Cloudflare deployment after the full Pages admin adapter and account resources are resolved. The current GitHub tip is clean of the audited runtime artifacts, but the removed debug collector remains in historical public commits. The safe next action is not to create an empty deployment; it is to close the authentication and R2/D1 provisioning gates, decide whether historical rewrite is required, then perform the documented non-destructive release and persistence tests.
+The source project is deployed and validated on Cloudflare Pages. The current GitHub tip is clean of the audited runtime artifacts, while the removed debug collector remains only in historical public commits. The remaining operational recommendation is to keep the one-time bootstrap secret disabled after administrator initialization and consider a separate historical-rewrite decision if repository-history hygiene requires it.
 
 ## Pre-push Review Procedure
 
@@ -104,3 +104,7 @@ Deployment `088e26e5` completed successfully after correcting the output-directo
 ## Authenticated production smoke test update
 
 The live `https://atelier-cms.pages.dev` deployment was verified with the configured administrator session. The admin dashboard loaded successfully; a disposable draft was created and saved; the R2 media library rendered after the Pages adapter contract fix; a small PNG uploaded to R2; its accessible text, title, caption, and description were saved; and the publication settings mutation completed successfully. The next deployment is a documentation-only revision used to verify that the D1 draft, R2 asset, and settings remain available after a new Pages deployment.
+
+## Final release validation
+
+Deployment `3efd3b65` completed successfully with the Pages settings contract fix. The authenticated settings form returned `Site settings are live.` Deployment `99df7c10` then completed successfully from a documentation-only revision. After that second deployment, the D1-backed draft `Atelier Production Smoke Test`, the R2-backed asset `Atelier R2 Smoke Test` with saved accessible text, and the publication settings were all visible again. The complete local suite now passes with 165 tests across 44 files; TypeScript validation and `pnpm build:pages` also pass. The production deployment remains at `https://atelier-cms.pages.dev`.

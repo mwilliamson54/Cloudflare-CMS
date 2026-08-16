@@ -4,7 +4,7 @@ import { CSRF_COOKIE, SESSION_COOKIE, createSession, currentSession, hashPasswor
 describe("Cloudflare production auth helpers", () => {
   it("hashes passwords with a verifiable salted PBKDF2 record", async () => {
     const encoded = await hashPassword("correct horse battery staple");
-    expect(encoded).toMatch(/^pbkdf2-sha256\$210000\$/);
+    expect(encoded).toMatch(/^pbkdf2-sha256\$100000\$/);
     await expect(verifyPassword("correct horse battery staple", encoded)).resolves.toBe(true);
     await expect(verifyPassword("wrong password", encoded)).resolves.toBe(false);
     await expect(hashPassword("short")).rejects.toThrow("12 to 256");

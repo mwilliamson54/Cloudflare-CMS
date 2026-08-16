@@ -118,7 +118,7 @@
 - [x] Provision or confirm stable production D1, R2, KV, and Pages resources after prerequisite verification.
 - [x] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
 - [ ] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene.
-- [ ] Perform the authenticated live Pages smoke tests and the required second-revision persistence test.
+- [x] Perform the authenticated live Pages smoke tests and the required second-revision persistence test.
 - [x] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.
 - [x] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
 - [x] Fix the live `/admin` production TypeError `Invalid URL`, then redeploy and verify the Cloudflare login shell and protected-route behavior.
@@ -128,3 +128,4 @@
 - [x] Align the Cloudflare Pages tRPC adapter with the client’s SuperJSON transformer so Date-valued create/update responses deserialize correctly in production.
 - [x] Fix the production media library crash caused by the Pages media-list response shape not matching the dashboard client contract, then retest R2-backed media operations.
 - [x] Align the Cloudflare Pages settings.update procedure with the full publication-settings payload used by the production dashboard, then verify D1-backed settings persistence.
+- [ ] Update the PBKDF2 helper regression expectation to the Cloudflare-compatible 100,000-iteration floor and rerun the complete release validation suite.
