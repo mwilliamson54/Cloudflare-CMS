@@ -128,4 +128,4 @@
 - [x] Align the Cloudflare Pages tRPC adapter with the client’s SuperJSON transformer so Date-valued create/update responses deserialize correctly in production.
 - [x] Fix the production media library crash caused by the Pages media-list response shape not matching the dashboard client contract, then retest R2-backed media operations.
 - [x] Align the Cloudflare Pages settings.update procedure with the full publication-settings payload used by the production dashboard, then verify D1-backed settings persistence.
-- [ ] Update the PBKDF2 helper regression expectation to the Cloudflare-compatible 100,000-iteration floor and rerun the complete release validation suite.
+- [x] Update the PBKDF2 helper regression expectation to the Cloudflare-compatible 100,000-iteration floor and rerun the complete release validation suite.
