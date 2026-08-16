@@ -86,7 +86,7 @@
 - [x] Produce a deployment-readiness report and obtain explicit confirmation before any external Cloudflare production change.
 - [ ] Provide the final live URL and post-deployment validation checklist after the user performs the publish action.
 - [x] Inspect or create the actual Cloudflare Pages project, then verify its production branch, build command, output directory, and Functions packaging settings in Cloudflare.
-- [ ] Push or synchronize the tested CMS source to the intended GitHub production branch and confirm Cloudflare Git deployment points at that branch.
+- [x] Push or synchronize the tested CMS source to the intended GitHub production branch and confirm Cloudflare Git deployment points at that branch.
 - [x] After persistent D1/R2/KV resources exist, verify the Pages project uses those exact stable bindings and does not recreate data resources per deployment.
 
 - [x] Implement or approve a production Cloudflare-compatible admin authentication and tRPC backend path before exposing `/admin` publicly.
@@ -95,7 +95,7 @@
 - [x] Implement the production authentication/session backend and Pages-compatible admin/tRPC mutation routes.
 - [ ] Add regression tests for production login/session expiry, CSRF, role capabilities, admin mutations, and public/private cache boundaries.
 - [x] Prepare persistent Cloudflare resource bindings and migration configuration using stable production identifiers without creating replacements per deploy.
-- [ ] Synchronize the validated CMS source and documentation to `mwilliamson54/Cloudflare-CMS` on `main` without committing secrets or runtime data.
+- [x] Synchronize the validated CMS source and documentation to `mwilliamson54/Cloudflare-CMS` on `main` without committing secrets or runtime data.
 - [x] Update deployment readiness documentation with the production authentication path and GitHub synchronization result.
 - [ ] Audit the published GitHub repository contents and full commit history for tracked runtime artifacts, secrets, local configuration, logs, generated outputs, and database files; remove any findings and re-verify `main`.
 - [x] Document and verify a complete pre-push review procedure covering runtime artifacts, local config, logs, generated files, database exports, and historical commits.
@@ -106,7 +106,7 @@
 - [x] Add non-mocked route-level coverage proving real logout clears the auth cookie/session and subsequent `/api/auth/me` returns 401.
 - [ ] Add a real-backend browser regression for `/api/auth/login`, `/api/auth/me`, and `/api/auth/logout` cookie/session behavior; the current Playwright coverage intentionally mocks these endpoints.
 - [ ] Verify Pages adapter parity for appearance, editor blocks, content types, and every procedure used by the real admin client.
-- [ ] Produce an explicit admin-client-to-Pages-adapter parity matrix and exhaustive regression coverage for every real admin procedure call.
+- [ ] Produce behavior-level regression coverage for every real admin procedure call, beyond procedure-name parity and focused contract tests.
 - [x] Produce an explicit admin-client-to-Pages-adapter procedure-name parity matrix covering all discovered CMS admin calls.
 - [ ] Add browser coverage for Cloudflare-authenticated admin login, redirect, logout, and representative D1/R2 mutations.
 - [x] Port the remaining dashboard tRPC procedure families to D1/R2 behind the Pages adapter: content lifecycle, taxonomies, media, settings, menus, users, tokens, SEO, themes, and plugins.
@@ -118,7 +118,7 @@
 - [x] Provision or confirm stable production D1, R2, KV, and Pages resources after prerequisite verification.
 - [x] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
 - [ ] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene.
-- [ ] Perform live Pages smoke tests and the required second-revision persistence test.
-- [ ] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.
-- [ ] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
-- [ ] Fix the live `/admin` production TypeError `Invalid URL`, then redeploy and verify the Cloudflare login shell and protected-route behavior.
+- [ ] Perform the authenticated live Pages smoke tests and the required second-revision persistence test.
+- [x] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.
+- [x] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
+- [x] Fix the live `/admin` production TypeError `Invalid URL`, then redeploy and verify the Cloudflare login shell and protected-route behavior.
