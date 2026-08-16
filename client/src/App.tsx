@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import { Article, BlogArchive, CategoryArchive, SearchResults, TagArchive } from "./pages/Blog";
 import { Page } from "./pages/Page";
 import { PreviewArticle } from "./pages/Preview";
+import CloudflareLogin from "./pages/CloudflareLogin";
 
 const Admin = lazy(() => import("./pages/Admin"));
 function AdminRoute() { return <Suspense fallback={<main className="min-h-screen bg-[#fbfaf7]" />}><Admin /></Suspense>; }
@@ -17,6 +18,7 @@ function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
+      <Route path={"/login"} component={CloudflareLogin} />
       <Route path={"/admin/:rest*"} component={AdminRoute} />
       <Route path={"/admin"} component={AdminRoute} />
       <Route path={"/preview/:id"} component={PreviewArticle} />

@@ -97,3 +97,5 @@
 - [x] Update deployment readiness documentation with the production authentication path and GitHub synchronization result.
 - [ ] Audit the published GitHub repository contents and full commit history for tracked runtime artifacts, secrets, local configuration, logs, generated outputs, and database files; remove any findings and re-verify `main`.
 - [x] Document and verify a complete pre-push review procedure covering runtime artifacts, local config, logs, generated files, database exports, and historical commits.
+- [x] Integrate the client auth hook and login/logout UX with `/api/auth/*` only when the Cloudflare production auth provider is enabled, while preserving the local Manus OAuth path for development.
+- [ ] Port or replace the dashboard’s tRPC mutations with Pages-compatible D1/R2 procedures before calling the Cloudflare admin experience production-ready.

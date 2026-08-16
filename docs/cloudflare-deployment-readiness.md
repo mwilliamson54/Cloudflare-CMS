@@ -72,3 +72,13 @@ Before every public source synchronization, inspect the full current tree and co
 - [`atelier-cms-complete-reference.md`](atelier-cms-complete-reference.md)
 - [`wordpress-rest-api.md`](wordpress-rest-api.md)
 - [`security-audit.md`](security-audit.md)
+
+## Pages tRPC Adapter Status
+
+A Cloudflare Pages `/api/trpc` Function now exists for the production cookie-session contract. Its verified procedures are `auth.me` and `auth.logout`; protected mutations require a live D1 session and the `cms_csrf_token`/`x-csrf-token` double-submit pair, and successful logout revokes the D1 session and clears both cookies. The adapter has focused regression coverage for anonymous reads, unauthenticated mutation rejection, CSRF rejection, session revocation, and cookie clearing.
+
+The adapter intentionally returns a typed `NOT_IMPLEMENTED` tRPC error for dashboard content procedures that still depend on the Node/Drizzle/MySQL repository. This is a safe failure mode, not a production-ready admin claim. The dashboard must remain unpublished or explicitly disabled until the remaining content, taxonomy, media, settings, menus, user, token, SEO, theme, and plugin procedures are ported to D1/R2 and the client auth hook is switched to `/api/auth/*` for Cloudflare production.
+
+## Cloudflare Login UX
+
+When `VITE_CMS_AUTH_MODE=cloudflare` is supplied at frontend build time, the client uses `/api/auth/me` for session inspection and `/api/auth/logout` for sign-out. Unauthenticated protected routes redirect to `/login`, where the graphical login form posts credentials to `/api/auth/login` and navigates back to `/admin` after a successful response. The default development build leaves the existing Manus OAuth/tRPC path unchanged. Production Pages configuration must set the build-time mode deliberately; it is not enabled implicitly.
