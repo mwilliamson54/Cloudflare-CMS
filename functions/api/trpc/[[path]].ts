@@ -1,5 +1,6 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { initTRPC, TRPCError } from "@trpc/server";
+import superjson from "superjson";
 import { z } from "zod";
 import { clearAuthCookies, currentSession, requireCsrf, type AuthEnv } from "../../_shared/auth";
 import { createOpaqueSecret, issueApiToken, sha256 as tokenSha256 } from "../../../server/cms/apiTokens";
@@ -9,7 +10,7 @@ import { listEditorBlocks } from "../../../server/cms/blocks";
 
 type Context = { request: Request; env: AuthEnv & { CMS_DB: D1Database; CMS_MEDIA?: R2Bucket } };
 
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.context<Context>().create({ transformer: superjson });
 const protectedProcedure = t.procedure.use(async ({ ctx, next }) => {
   const session = await currentSession(ctx.request, ctx.env);
   if (!session) throw new TRPCError({ code: "UNAUTHORIZED", message: "Authentication required." });

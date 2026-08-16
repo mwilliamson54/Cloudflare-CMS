@@ -44,7 +44,7 @@ describe("Cloudflare tRPC adapter auth boundary", () => {
     const { env } = makeEnv();
     const response = await onRequest({ env, params: { path: ["auth", "me"] }, request: new Request("https://cms.example/api/trpc/auth.me") });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ result: { data: null } });
+    expect(await response.json()).toMatchObject({ result: { data: { json: null } } });
   });
 
   it("rejects protected mutations without a production session", async () => {
