@@ -52,6 +52,20 @@ function callerFor(env: { CMS_DB: unknown; JWT_SECRET: string }) {
 }
 
 describe("Cloudflare admin procedures", () => {
+  it("exposes every discovered CMS admin procedure used by the client", () => {
+    const procedures = [
+      "bootstrap", "apiTokens.create", "apiTokens.list", "apiTokens.revoke", "appearance.get", "appearance.update",
+      "categories.create", "categories.delete", "categories.list", "categories.update", "content.create", "content.delete", "content.list", "content.preview", "content.restore", "content.trash", "content.update",
+      "contentTypes.create", "contentTypes.list", "editorBlocks", "media.delete", "media.list", "media.replace", "media.update", "media.upload", "menus.list", "menus.save", "seo.summary", "settings.get", "settings.update", "tags.create", "tags.delete", "tags.list", "tags.update", "users.list", "users.updateRole",
+    ];
+    const record = (appRouter as any)._def.record.cms;
+    for (const path of procedures) {
+      const node = path.split(".").reduce((current, segment) => current?.[segment]?._def?.record ?? current?.[segment], record);
+      expect(node, path).toBeTruthy();
+      expect(typeof node._def?.procedure, path).toBe("boolean");
+    }
+  });
+
   it("issues a D1-backed JWT token that the REST verifier accepts", async () => {
     const { env, session } = makeEnv("author");
     session.token_hash = await sha256("session"); session.csrf_token_hash = await sha256("csrf");
