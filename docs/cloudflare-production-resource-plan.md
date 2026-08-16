@@ -13,7 +13,7 @@ The refreshed verified account is `d20c68056ef972d805bd177e2a0ab145`. It now con
 | D1 database | `atelier-cms` | `CMS_DB` | `d79481e3-a539-4c79-9cdb-3b8f4ae3cb65` |
 | R2 bucket | `atelier-cms-media` | `CMS_MEDIA` | `atelier-cms-media` in Pages Functions binding; provisioned in WEUR |
 | KV namespace | `atelier-cms-cache` | `CMS_CACHE` | `0ba1110d7669485ea698bb60dc538be8` |
-| Pages project | `atelier-cms` | Pages Functions | Pending creation; GitHub `mwilliamson54/Cloudflare-CMS`, branch `main`, build output `client/dist`, Functions under `functions/` |
+| Pages project | `atelier-cms` | Pages Functions | Project ID `b47fe04b-f35b-4db6-8055-b0ceba561753`; `https://atelier-cms.pages.dev`; GitHub `mwilliamson54/Cloudflare-CMS`, branch `main`, build output `client/dist`, Functions under `functions/` |
 
 ## Migration order
 
@@ -37,4 +37,4 @@ The optional scheduler Worker uses `*/5 * * * *` and the same D1 database. Deplo
 
 ## Explicit safeguards
 
-D1, R2, and KV were provisioned in the refreshed account after the user’s deployment request and are recorded above. The unrelated existing Pages project was not modified. The Atelier Pages project still must be created against the verified GitHub repository, and a second deployment must prove that content, sessions, media metadata, and menus survive without recreating or replacing D1/R2 resources.
+D1, R2, and KV were provisioned in the refreshed account after the user’s deployment request and are recorded above. The unrelated existing Pages project was not modified. The Atelier Pages project is created and bound to the stable resources; its first GitHub deployment is now pending/needs triggering from the verified `main` branch. A second deployment must prove that content, sessions, media metadata, and menus survive without recreating or replacing D1/R2 resources.

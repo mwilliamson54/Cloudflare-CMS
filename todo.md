@@ -79,22 +79,22 @@
 - [x] Write a complete CMS reference guide covering architecture, prerequisites, technology stack, features, security, workflows, APIs, Cloudflare implementation, and key design logic.
 - [x] Add authenticated coverage proving a graphical image block selects existing media or uploads/drops a new image into the R2-backed library, then preserves alternative text and caption in saved graphical content.
 - [x] Audit the existing Cloudflare account, repository, and deployment artifacts against the supplied production deployment instructions without changing persistent production data.
-- [ ] Prepare a non-destructive D1 migration, R2/KV binding, secret, and scheduler deployment plan using persistent production resource identifiers.
+- [x] Prepare a non-destructive D1 migration, R2/KV binding, secret, and scheduler deployment plan using persistent production resource identifiers.
 - [x] Draft the non-destructive production resource and binding plan with explicit placeholders and no-create safeguards.
-- [ ] Replace the plan placeholders with actual D1, R2, KV, and Pages identifiers after approved resource creation and verify them against live bindings.
-- [ ] Verify the GitHub production branch, Pages build configuration, Functions packaging, and deployment data-persistence safeguards.
+- [x] Replace the plan placeholders with actual D1, R2, KV, and Pages identifiers after approved resource creation and verify them against live bindings.
+- [x] Verify the GitHub production branch, Pages build configuration, Functions packaging, and deployment data-persistence safeguards.
 - [x] Produce a deployment-readiness report and obtain explicit confirmation before any external Cloudflare production change.
 - [ ] Provide the final live URL and post-deployment validation checklist after the user performs the publish action.
-- [ ] Inspect or create the actual Cloudflare Pages project, then verify its production branch, build command, output directory, and Functions packaging settings in Cloudflare.
+- [x] Inspect or create the actual Cloudflare Pages project, then verify its production branch, build command, output directory, and Functions packaging settings in Cloudflare.
 - [ ] Push or synchronize the tested CMS source to the intended GitHub production branch and confirm Cloudflare Git deployment points at that branch.
-- [ ] After persistent D1/R2/KV resources exist, verify the Pages project uses those exact stable bindings and does not recreate data resources per deployment.
+- [x] After persistent D1/R2/KV resources exist, verify the Pages project uses those exact stable bindings and does not recreate data resources per deployment.
 
 - [x] Implement or approve a production Cloudflare-compatible admin authentication and tRPC backend path before exposing `/admin` publicly.
-- [ ] Enable R2 and provision persistent production D1, R2, and optional KV resources only after the production architecture and authentication gates are approved.
+- [x] Enable R2 and provision persistent production D1, R2, and optional KV resources only after the production architecture and authentication gates are approved.
 - [x] Design a Cloudflare-compatible production admin identity, session, CSRF, and authorization contract without enabling the development-only E2E fixture.
 - [x] Implement the production authentication/session backend and Pages-compatible admin/tRPC mutation routes.
 - [ ] Add regression tests for production login/session expiry, CSRF, role capabilities, admin mutations, and public/private cache boundaries.
-- [ ] Prepare persistent Cloudflare resource bindings and migration configuration using stable production identifiers without creating replacements per deploy.
+- [x] Prepare persistent Cloudflare resource bindings and migration configuration using stable production identifiers without creating replacements per deploy.
 - [ ] Synchronize the validated CMS source and documentation to `mwilliamson54/Cloudflare-CMS` on `main` without committing secrets or runtime data.
 - [x] Update deployment readiness documentation with the production authentication path and GitHub synchronization result.
 - [ ] Audit the published GitHub repository contents and full commit history for tracked runtime artifacts, secrets, local configuration, logs, generated outputs, and database files; remove any findings and re-verify `main`.
@@ -114,8 +114,8 @@
 - [x] Remove remaining `NOT_IMPLEMENTED` admin procedures (`cms.bootstrap` and API-token issuance) from the Pages adapter before production exposure.
 - [x] Port the remaining SEO reporting procedures and Cloudflare-native API-token issuance procedure to the Pages adapter.
 
-- [ ] Re-verify refreshed Cloudflare access for R2, D1, KV, Pages, and refreshed GitHub access before deployment changes.
-- [ ] Provision or confirm stable production D1, R2, KV, and Pages resources after prerequisite verification.
-- [ ] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
+- [x] Re-verify refreshed Cloudflare access for R2, D1, KV, Pages, and refreshed GitHub access before deployment changes.
+- [x] Provision or confirm stable production D1, R2, KV, and Pages resources after prerequisite verification.
+- [x] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
 - [ ] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene.
 - [ ] Perform live Pages smoke tests and the required second-revision persistence test.
