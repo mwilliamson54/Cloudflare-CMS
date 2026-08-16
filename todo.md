@@ -126,3 +126,4 @@
 - [ ] Re-enable the Cloudflare management connector needed to bootstrap the supplied production administrator and complete authenticated persistence validation.
 - [ ] Make the guarded production bootstrap route able to initialize the password for the explicitly requested existing administrator email using the one-time secret, then remove the secret after successful use.
 - [ ] Align the Cloudflare Pages tRPC adapter with the client’s SuperJSON transformer so Date-valued create/update responses deserialize correctly in production.
+- [ ] Fix the production media library crash caused by the Pages media-list response shape not matching the dashboard client contract, then retest R2-backed media operations.
