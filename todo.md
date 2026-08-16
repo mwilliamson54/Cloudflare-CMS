@@ -87,7 +87,7 @@
 - [ ] Push or synchronize the tested CMS source to the intended GitHub production branch and confirm Cloudflare Git deployment points at that branch.
 - [ ] After persistent D1/R2/KV resources exist, verify the Pages project uses those exact stable bindings and does not recreate data resources per deployment.
 
-- [ ] Implement or approve a production Cloudflare-compatible admin authentication and tRPC backend path before exposing `/admin` publicly.
+- [x] Implement or approve a production Cloudflare-compatible admin authentication and tRPC backend path before exposing `/admin` publicly.
 - [ ] Enable R2 and provision persistent production D1, R2, and optional KV resources only after the production architecture and authentication gates are approved.
 - [x] Design a Cloudflare-compatible production admin identity, session, CSRF, and authorization contract without enabling the development-only E2E fixture.
 - [ ] Implement the production authentication/session backend and Pages-compatible admin/tRPC mutation routes.
@@ -101,3 +101,6 @@
 - [ ] Port or replace the dashboard’s tRPC mutations with Pages-compatible D1/R2 procedures before calling the Cloudflare admin experience production-ready.
 - [ ] Add client/browser regression coverage for successful Cloudflare login, failed credentials, unauthenticated admin redirect, and logout cookie/session revocation.
 - [ ] Port the remaining dashboard tRPC procedure families to D1/R2 behind the Pages adapter: content lifecycle, taxonomies, media, settings, menus, users, tokens, SEO, themes, and plugins.
+- [x] Port Pages-compatible D1/R2 procedures for content, taxonomies, media, settings, menus, users, API-token list/revoke, themes, and plugins.
+- [ ] Remove remaining `NOT_IMPLEMENTED` admin procedures (`cms.bootstrap` and API-token issuance) from the Pages adapter before production exposure.
+- [ ] Port the remaining SEO reporting procedures and Cloudflare-native API-token issuance procedure to the Pages adapter.
