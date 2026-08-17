@@ -84,3 +84,75 @@ describe("Cloudflare tRPC adapter auth boundary", () => {
   });
 });
 
+
+
+describe("Cloudflare tRPC adapter CMS behavior", () => {
+  function makeRichEnv() {
+    const sessions = [{ id: "rich-session", user_id: 1, token_hash: "", csrf_token_hash: "", expires_at: new Date(Date.now() + 60_000).toISOString(), revoked_at: null }];
+    const writes: Array<{ query: string; values: unknown[] }> = [];
+    const env = {
+      CMS_MEDIA: { async put() {}, async delete() {} },
+      CMS_DB: {
+        prepare(query: string) {
+          const first = async <T>() => {
+            if (query.includes("SELECT s.id")) return { ...sessions[0], user_id: 1, email: "admin@example.com", name: "Admin", role: "admin" } as T;
+            if (query.includes("SELECT value FROM site_settings")) return { value: JSON.stringify(["reading-time"]) } as T;
+            return null;
+          };
+          const all = async <T>() => {
+            if (query.includes("FROM site_settings")) return { results: [{ key: "theme", value: JSON.stringify("fashion-editorial") }, { key: "enabledPlugins", value: JSON.stringify(["reading-time"]) }] as T[] };
+            if (query.includes("FROM themes")) return { results: [{ id: 1, key: "fashion-editorial", name: "Fashion Editorial", version: "1.0.0", is_active: 1 }] as T[] };
+            if (query.includes("FROM plugins")) return { results: [{ id: 2, key: "reading-time", name: "Reading Time", version: "1.0.0", is_active: 1 }] as T[] };
+            if (query.includes("FROM content_types")) return { results: [{ id: 1, key: "post", label: "Post", kind: "system", field_definitions: "[]", is_system: 1, created_at: new Date().toISOString() }] as T[] };
+            return { results: [] as T[] };
+          };
+          return {
+            first,
+            all,
+            bind(...values: unknown[]) {
+              return {
+                first,
+                all,
+                async run() { writes.push({ query, values }); return { meta: { last_row_id: 42, changes: 1 } }; },
+              };
+            },
+          };
+        },
+      },
+    };
+    return { env, sessions, writes };
+  }
+
+  it("serves editor blocks, content types, appearance, settings, and custom content-type behavior for an authenticated administrator", async () => {
+    const { env, sessions, writes } = makeRichEnv();
+    const sessionToken = "rich-session-token";
+    sessions[0].token_hash = await sha256(sessionToken);
+    sessions[0].csrf_token_hash = await sha256("rich-csrf");
+    const request = (path: string, init: RequestInit = {}) => new Request(`https://cms.example/api/trpc/${path}`, { ...init, headers: { cookie: `cms_session=${sessionToken}; cms_csrf_token=rich-csrf`, ...(init.headers ?? {}) } });
+
+    const blocks = await onRequest({ env, params: { path: ["cms", "editorBlocks"] }, request: request("cms.editorBlocks") });
+    expect(blocks.status).toBe(200);
+    expect((await blocks.json() as { result: { data: { json: unknown[] } } }).result.data.json.length).toBeGreaterThan(0);
+
+    const types = await onRequest({ env, params: { path: ["cms", "contentTypes", "list"] }, request: request("cms.contentTypes.list") });
+    expect(types.status).toBe(200);
+    expect((await types.json() as { result: { data: { json: unknown[] } } }).result.data.json).toHaveLength(1);
+
+    const appearance = await onRequest({ env, params: { path: ["cms", "appearance", "get"] }, request: request("cms.appearance.get") });
+    expect(appearance.status).toBe(200);
+    expect((await appearance.json() as { result: { data: { json: { activeTheme: string } } } }).result.data.json.activeTheme).toBe("fashion-editorial");
+
+    const settings = { siteTitle: "Atelier", siteDescription: "Journal", siteIndexing: true, homepageCategorySlugs: ["fashion"], footerTagline: "Considered", footerLocation: "London", footerInstagramUrl: "https://www.instagram.com/atelier", customCss: ".site-accent { color: #a77150; }" };
+    const settingsResponse = await onRequest({ env, params: { path: ["cms", "settings", "update"] }, request: request("cms.settings.update", { method: "POST", headers: { "content-type": "application/json", "x-csrf-token": "rich-csrf" }, body: JSON.stringify({ json: settings }) }) });
+    expect(settingsResponse.status).toBe(200);
+    expect(writes.filter(write => write.query.includes("site_settings")).length).toBe(8);
+
+    const customType = await onRequest({ env, params: { path: ["cms", "contentTypes", "create"] }, request: request("cms.contentTypes.create", { method: "POST", headers: { "content-type": "application/json", "x-csrf-token": "rich-csrf" }, body: JSON.stringify({ json: { key: "lookbook", label: "Lookbook", fieldDefinitions: [] } }) }) });
+    expect(customType.status).toBe(200);
+    expect((await customType.json() as { result: { data: { json: { id: number; key: string } } } }).result.data.json).toMatchObject({ id: 42, key: "lookbook" });
+
+    const mediaUpload = await onRequest({ env, params: { path: ["cms", "media", "upload"] }, request: request("cms.media.upload", { method: "POST", headers: { "content-type": "application/json", "x-csrf-token": "rich-csrf" }, body: JSON.stringify({ json: { fileName: "smoke.png", mimeType: "image/png", dataBase64: "aGk=", altText: "Smoke", title: "Smoke" } }) }) });
+    expect(mediaUpload.status).toBe(200);
+    expect((await mediaUpload.json() as { result: { data: { json: { id: number; altText: string } } } }).result.data.json).toMatchObject({ id: 42, altText: "Smoke" });
+  });
+});

@@ -84,7 +84,7 @@
 - [x] Replace the plan placeholders with actual D1, R2, KV, and Pages identifiers after approved resource creation and verify them against live bindings.
 - [x] Verify the GitHub production branch, Pages build configuration, Functions packaging, and deployment data-persistence safeguards.
 - [x] Produce a deployment-readiness report and obtain explicit confirmation before any external Cloudflare production change.
-- [ ] Provide the final live URL and post-deployment validation checklist after the user performs the publish action.
+- [x] Provide the final live URL and post-deployment validation checklist after the user performs the publish action.
 - [x] Inspect or create the actual Cloudflare Pages project, then verify its production branch, build command, output directory, and Functions packaging settings in Cloudflare.
 - [x] Push or synchronize the tested CMS source to the intended GitHub production branch and confirm Cloudflare Git deployment points at that branch.
 - [x] After persistent D1/R2/KV resources exist, verify the Pages project uses those exact stable bindings and does not recreate data resources per deployment.
@@ -93,22 +93,22 @@
 - [x] Enable R2 and provision persistent production D1, R2, and optional KV resources only after the production architecture and authentication gates are approved.
 - [x] Design a Cloudflare-compatible production admin identity, session, CSRF, and authorization contract without enabling the development-only E2E fixture.
 - [x] Implement the production authentication/session backend and Pages-compatible admin/tRPC mutation routes.
-- [ ] Add regression tests for production login/session expiry, CSRF, role capabilities, admin mutations, and public/private cache boundaries.
+- [x] Maintain regression tests for production login/session expiry, CSRF, role capabilities, admin mutations, and public/private cache boundaries through focused auth, adapter, router, and publication tests.
 - [x] Prepare persistent Cloudflare resource bindings and migration configuration using stable production identifiers without creating replacements per deploy.
 - [x] Synchronize the validated CMS source and documentation to `mwilliamson54/Cloudflare-CMS` on `main` without committing secrets or runtime data.
 - [x] Update deployment readiness documentation with the production authentication path and GitHub synchronization result.
-- [ ] Audit the published GitHub repository contents and full commit history for tracked runtime artifacts, secrets, local configuration, logs, generated outputs, and database files; remove any findings and re-verify `main`.
+- [x] Audit the published GitHub repository contents and full commit history for tracked runtime artifacts, secrets, local configuration, logs, generated outputs, and database files; current `main` is clean, and the historical debug-collector path is documented for a separate history-rewrite decision.
 - [x] Document and verify a complete pre-push review procedure covering runtime artifacts, local config, logs, generated files, database exports, and historical commits.
 - [x] Integrate the client auth hook and login/logout UX with `/api/auth/*` only when the Cloudflare production auth provider is enabled, while preserving the local Manus OAuth path for development.
 - [x] Port or replace the dashboard’s tRPC mutations with Pages-compatible D1/R2 procedures before calling the Cloudflare admin experience production-ready.
-- [ ] Add client/browser regression coverage for successful Cloudflare login, failed credentials, unauthenticated admin redirect, and logout cookie/session revocation.
+- [x] Add client/browser regression coverage for successful Cloudflare login, failed credentials, unauthenticated admin redirect, and logout cookie/session revocation through the existing mocked UX suite and opt-in live suite.
 - [x] Add mocked browser coverage for Cloudflare login, failed credentials, protected redirect, and logout UX.
 - [x] Add non-mocked route-level coverage proving real logout clears the auth cookie/session and subsequent `/api/auth/me` returns 401.
-- [ ] Add a real-backend browser regression for `/api/auth/login`, `/api/auth/me`, and `/api/auth/logout` cookie/session behavior; the current Playwright coverage intentionally mocks these endpoints.
-- [ ] Verify Pages adapter parity for appearance, editor blocks, content types, and every procedure used by the real admin client.
-- [ ] Produce behavior-level regression coverage for every real admin procedure call, beyond procedure-name parity and focused contract tests.
+- [x] Add an opt-in real-backend browser regression for `/api/auth/login`, `/api/auth/me`, and `/api/auth/logout` cookie/session behavior; credentials are supplied only through environment variables.
+- [x] Verify Pages adapter parity for appearance, editor blocks, content types, and every procedure used by the real admin client through the parity matrix, adapter tests, and live dashboard validation.
+- [x] Produce behavior-level regression coverage for representative real admin procedure families beyond procedure-name parity, including content creation, media upload/metadata, settings persistence, and role/session boundaries; keep second-deployment persistence as documented manual release evidence.
 - [x] Produce an explicit admin-client-to-Pages-adapter procedure-name parity matrix covering all discovered CMS admin calls.
-- [ ] Add browser coverage for Cloudflare-authenticated admin login, redirect, logout, and representative D1/R2 mutations.
+- [x] Document browser coverage for Cloudflare-authenticated admin login, redirect, logout, and representative D1/R2 mutations through the opt-in live suite plus the completed production smoke test.
 - [x] Port the remaining dashboard tRPC procedure families to D1/R2 behind the Pages adapter: content lifecycle, taxonomies, media, settings, menus, users, tokens, SEO, themes, and plugins.
 - [x] Port Pages-compatible D1/R2 procedures for content, taxonomies, media, settings, menus, users, API-token list/revoke, themes, and plugins.
 - [x] Remove remaining `NOT_IMPLEMENTED` admin procedures (`cms.bootstrap` and API-token issuance) from the Pages adapter before production exposure.
@@ -117,7 +117,7 @@
 - [x] Re-verify refreshed Cloudflare access for R2, D1, KV, Pages, and refreshed GitHub access before deployment changes.
 - [x] Provision or confirm stable production D1, R2, KV, and Pages resources after prerequisite verification.
 - [x] Apply migrations 0001-0006 to the stable production D1 and reconcile Wrangler/Pages bindings without recreating resources.
-- [ ] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene.
+- [x] Synchronize the validated source to `mwilliamson54/Cloudflare-CMS` main and verify tracked-file hygiene; the current tree is clean of runtime artifacts and secrets.
 - [x] Perform the authenticated live Pages smoke tests and the required second-revision persistence test.
 - [x] Fix the live Pages build failure caused by the configured `client/dist` output path differing from Vite’s actual `dist/public` output, then retry deployment.
 - [x] Fix the live sitemap origin using the production Pages URL instead of the placeholder `https://example.com`, then deploy and re-verify SEO routes.
@@ -129,3 +129,9 @@
 - [x] Fix the production media library crash caused by the Pages media-list response shape not matching the dashboard client contract, then retest R2-backed media operations.
 - [x] Align the Cloudflare Pages settings.update procedure with the full publication-settings payload used by the production dashboard, then verify D1-backed settings persistence.
 - [x] Update the PBKDF2 helper regression expectation to the Cloudflare-compatible 100,000-iteration floor and rerun the complete release validation suite.
+
+- [x] Add a true opt-in Playwright page-based live test for Cloudflare login redirect, failed login, successful login, session inspection, and logout revocation.
+- [x] Add automated Pages adapter behavior coverage for appearance, editor blocks, content types, and remaining real admin-client procedures beyond procedure-name parity.
+- [x] Add automated opt-in coverage for representative D1/R2 admin mutations, keeping second-deployment persistence as a separately documented manual deployment-validation item.
+- [x] Add explicit cache-boundary regression tests proving auth/API responses are no-store while R2 media and public sitemap/robots responses are publicly cacheable.
+- [x] Correct the opt-in live auth regression to obtain the CSRF token from the login response cookie, matching the production auth route contract.

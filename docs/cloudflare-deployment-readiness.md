@@ -108,3 +108,7 @@ The live `https://atelier-cms.pages.dev` deployment was verified with the config
 ## Final release validation
 
 Deployment `3efd3b65` completed successfully with the Pages settings contract fix. The authenticated settings form returned `Site settings are live.` Deployment `99df7c10` then completed successfully from a documentation-only revision. After that second deployment, the D1-backed draft `Atelier Production Smoke Test`, the R2-backed asset `Atelier R2 Smoke Test` with saved accessible text, and the publication settings were all visible again. The complete local suite now passes with 165 tests across 44 files; TypeScript validation and `pnpm build:pages` also pass. The production deployment remains at `https://atelier-cms.pages.dev`.
+
+## Final coverage validation
+
+The opt-in live Cloudflare Playwright suite was executed against `https://atelier-cms.pages.dev` with the administrator credentials supplied at runtime: both the page-based login redirect/failed-login/successful-login/logout flow and the cookie-backed `/api/auth/login`, `/api/auth/me`, `/api/auth/logout` session-revocation flow passed. The adapter behavior suite now covers editor blocks, content types, appearance, full settings writes, custom content-type creation, and an authenticated R2 upload mutation. Cache-boundary regressions verify `no-store` for auth/API JSON, immutable public caching for R2 media, and bounded public caching for robots and sitemap delivery. The complete suite, TypeScript check, Pages build, and default opt-in-test skip check pass.
